@@ -227,3 +227,85 @@ MAX_POSITIVES_PER_ANCHOR = 3
 MAX_NEGATIVES_PER_ANCHOR = 5
 
 SEED = 42
+
+# ============================================================
+# Mining statistic
+# ============================================================
+SIMILARITY_STATISTICS_FILE = (
+    MINING_DIR / "similarity_statistics.json"
+)
+
+THRESHOLD_ANALYSIS_FILE = (
+    MINING_DIR / "threshold_analysis.csv"
+)
+
+# ============================================================
+# Mining visualization
+# ============================================================
+
+SIMILARITY_HISTOGRAM_FILE = (
+    MINING_DIR / "similarity_histogram.png"
+)
+
+SIMILARITY_CDF_FILE = (
+    MINING_DIR / "similarity_cdf.png"
+)
+
+THRESHOLD_CURVE_FILE = (
+    MINING_DIR / "threshold_curve.png"
+)
+
+# ============================================================
+# Hard Negative Mining
+# ============================================================
+
+HARD_NEGATIVE_DIR = (
+    ANALYSIS_DIR / "hard_negative"
+)
+
+HARD_NEGATIVE_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+HARD_NEGATIVE_FILE = (
+    HARD_NEGATIVE_DIR / "hard_negatives.csv"
+)
+
+INTRA_NEGATIVE_FILE = (
+    HARD_NEGATIVE_DIR / "intra_paper_negatives.csv"
+)
+
+INTER_NEGATIVE_FILE = (
+    HARD_NEGATIVE_DIR / "inter_paper_negatives.csv"
+)
+
+HARD_NEGATIVE_STATISTICS_FILE = (
+    HARD_NEGATIVE_DIR /
+    "hard_negative_statistics.json"
+)
+
+HARD_NEGATIVE_INFO_FILE = (
+    HARD_NEGATIVE_DIR /
+    "hard_negative_info.json"
+)
+
+HARD_NEGATIVE_HISTOGRAM_FILE = (
+    HARD_NEGATIVE_DIR /
+    "hard_negative_histogram.png"
+)
+
+NEGATIVE_TYPE_PLOT_FILE = (
+    HARD_NEGATIVE_DIR /
+    "negative_type_distribution.png"
+)
+
+HARD_NEGATIVE_COMPLETED_FLAG = (
+    HARD_NEGATIVE_DIR /
+    "completed.flag"
+)
+
+HARD_NEGATIVE_CHECKPOINT_FILE = (
+    CHECKPOINT_DIR /
+    "hard_negative_checkpoint.json"
+)
