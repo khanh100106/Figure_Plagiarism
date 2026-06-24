@@ -16,3 +16,118 @@
 2026-06-24 08:45:29 | INFO | Positive pairs : 4
 2026-06-24 08:45:29 | INFO | Finished in 0.03 seconds
 2026-06-24 08:45:29 | INFO | ============================================================
+2026-06-24 13:16:39 | INFO | ============================================================
+2026-06-24 13:16:39 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:16:39 | INFO | ============================================================
+2026-06-24 13:16:39 | INFO | Embeddings : (100, 768)
+2026-06-24 13:16:39 | INFO | Metadata   : 100
+2026-06-24 13:16:39 | INFO | Index size : 100
+2026-06-24 13:18:04 | INFO | ============================================================
+2026-06-24 13:18:04 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:18:04 | INFO | ============================================================
+2026-06-24 13:18:04 | INFO | Embeddings : (100, 768)
+2026-06-24 13:18:04 | INFO | Metadata   : 100
+2026-06-24 13:18:04 | INFO | Index size : 100
+2026-06-24 13:18:52 | INFO | ============================================================
+2026-06-24 13:18:52 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:18:52 | INFO | ============================================================
+2026-06-24 13:18:52 | INFO | Embeddings : (100, 768)
+2026-06-24 13:18:52 | INFO | Metadata   : 100
+2026-06-24 13:18:52 | INFO | Index size : 100
+2026-06-24 13:18:52 | INFO | Searching Top-20 nearest neighbours...
+2026-06-24 13:18:52 | INFO | Nearest neighbour search completed.
+2026-06-24 13:18:52 | INFO | Generating Top-K candidates...
+2026-06-24 13:18:52 | INFO | Candidates : 1,065
+2026-06-24 13:18:52 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\topk_candidates.csv
+2026-06-24 13:18:52 | INFO | Filtering positive pairs...
+2026-06-24 13:18:52 | INFO | Positive pairs : 4
+2026-06-24 13:18:52 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\positive_pairs.csv
+2026-06-24 13:18:52 | INFO | ============================================================
+2026-06-24 13:18:52 | INFO | Positive pairs : 4
+2026-06-24 13:18:52 | INFO | Finished in 0.02 seconds
+2026-06-24 13:18:52 | INFO | ============================================================
+2026-06-24 13:23:30 | INFO | ============================================================
+2026-06-24 13:23:30 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:23:30 | INFO | ============================================================
+2026-06-24 13:23:30 | INFO | Embeddings : (100, 768)
+2026-06-24 13:23:30 | INFO | Metadata   : 100
+2026-06-24 13:23:30 | INFO | Index size : 100
+2026-06-24 13:23:30 | INFO | Searching Top-20 nearest neighbours...
+2026-06-24 13:23:30 | INFO | Nearest neighbour search completed.
+2026-06-24 13:23:30 | INFO | Generating Top-K candidates...
+2026-06-24 13:23:30 | INFO | Candidates : 1,065
+2026-06-24 13:23:30 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\topk_candidates.csv
+2026-06-24 13:23:30 | INFO | Filtering positive pairs...
+2026-06-24 13:23:30 | INFO | Positive pairs : 4
+2026-06-24 13:23:30 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\positive_pairs.csv
+2026-06-24 13:23:30 | INFO | ============================================================
+2026-06-24 13:23:30 | INFO | Positive pairs : 4
+2026-06-24 13:23:30 | INFO | Finished in 0.01 seconds
+2026-06-24 13:23:30 | INFO | ============================================================
+2026-06-24 13:26:05 | INFO | ============================================================
+2026-06-24 13:26:05 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:26:05 | INFO | ============================================================
+2026-06-24 13:26:05 | INFO | Embeddings : (100, 768)
+2026-06-24 13:26:05 | INFO | Metadata   : 100
+2026-06-24 13:26:05 | INFO | Index size : 100
+2026-06-24 13:26:05 | INFO | Searching Top-20 nearest neighbours...
+2026-06-24 13:26:05 | INFO | Nearest neighbour search completed.
+2026-06-24 13:26:05 | INFO | Generating Top-K candidates...
+2026-06-24 13:26:05 | INFO | Candidates : 1,065
+2026-06-24 13:26:05 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\topk_candidates.csv
+2026-06-24 13:26:05 | INFO | Filtering positive pairs...
+2026-06-24 13:26:05 | INFO | Positive pairs : 4
+2026-06-24 13:26:05 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\positive_pairs.csv
+2026-06-24 13:26:05 | INFO | ============================================================
+2026-06-24 13:26:05 | INFO | Positive pairs : 4
+2026-06-24 13:26:05 | INFO | Finished in 0.02 seconds
+2026-06-24 13:26:05 | INFO | ============================================================
+2026-06-24 13:38:09 | INFO | ============================================================
+2026-06-24 13:38:09 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:38:09 | INFO | ============================================================
+2026-06-24 13:38:09 | INFO | Embeddings : (100, 768)
+2026-06-24 13:38:09 | INFO | Metadata   : 100
+2026-06-24 13:38:09 | INFO | Index size : 100
+2026-06-24 13:38:09 | INFO | Searching Top-20 nearest neighbours...
+2026-06-24 13:38:09 | INFO | Nearest neighbour search completed.
+2026-06-24 13:38:09 | INFO | Generating Top-K candidates...
+2026-06-24 13:38:09 | INFO | Candidates : 1,065
+2026-06-24 13:38:09 | INFO | Recommended threshold: 0.8702
+2026-06-24 13:38:09 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\topk_candidates.csv
+2026-06-24 13:38:09 | INFO | Filtering positive pairs...
+2026-06-24 13:38:09 | INFO | Positive pairs : 4
+2026-06-24 13:38:09 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\positive_pairs.csv
+2026-06-24 13:38:09 | INFO | ============================================================
+2026-06-24 13:38:09 | INFO | Positive pairs : 4
+2026-06-24 13:38:09 | INFO | Finished in 0.02 seconds
+2026-06-24 13:38:09 | INFO | ============================================================
+2026-06-24 13:57:04 | INFO | ============================================================
+2026-06-24 13:57:04 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:57:04 | INFO | ============================================================
+2026-06-24 13:57:04 | INFO | Embeddings : (100, 768)
+2026-06-24 13:57:04 | INFO | Metadata   : 100
+2026-06-24 13:57:04 | INFO | Index size : 100
+2026-06-24 13:57:04 | INFO | Searching Top-20 nearest neighbours...
+2026-06-24 13:57:04 | INFO | Nearest neighbour search completed.
+2026-06-24 13:57:04 | INFO | Generating Top-K candidates...
+2026-06-24 13:57:04 | INFO | Candidates : 1,065
+2026-06-24 13:57:04 | INFO | Recommended threshold: 0.8702
+2026-06-24 13:57:48 | INFO | ============================================================
+2026-06-24 13:57:48 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 13:57:48 | INFO | ============================================================
+2026-06-24 13:57:48 | INFO | Embeddings : (100, 768)
+2026-06-24 13:57:48 | INFO | Metadata   : 100
+2026-06-24 13:57:48 | INFO | Index size : 100
+2026-06-24 13:57:48 | INFO | Searching Top-20 nearest neighbours...
+2026-06-24 13:57:48 | INFO | Nearest neighbour search completed.
+2026-06-24 13:57:48 | INFO | Generating Top-K candidates...
+2026-06-24 13:57:48 | INFO | Candidates : 1,065
+2026-06-24 13:57:48 | INFO | Recommended threshold: 0.8702
+2026-06-24 13:57:50 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\topk_candidates.csv
+2026-06-24 13:57:50 | INFO | Filtering positive pairs...
+2026-06-24 13:57:50 | INFO | Positive pairs : 4
+2026-06-24 13:57:50 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\positive_pairs.csv
+2026-06-24 13:57:50 | INFO | ============================================================
+2026-06-24 13:57:50 | INFO | Positive pairs : 4
+2026-06-24 13:57:50 | INFO | Finished in 1.77 seconds
+2026-06-24 13:57:50 | INFO | ============================================================
