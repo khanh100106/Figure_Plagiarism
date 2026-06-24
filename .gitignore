@@ -1,0 +1,18 @@
+# Virtual environment
+.venv/
+venv/
+
+# PyCharm
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Env file
+.env
+
+# Dataset
+paper2fig2026/captions
+paper2fig2026/figures

@@ -1,0 +1,9 @@
+2026-06-24 08:33:20 | INFO | ============================================================
+2026-06-24 08:33:20 | INFO | Paper2Fig-2026 FAISS Builder
+2026-06-24 08:33:20 | INFO | ============================================================
+2026-06-24 08:33:20 | INFO | Loaded embeddings: (100, 768)
+2026-06-24 08:33:20 | INFO | Embedding validation passed.
+2026-06-24 08:33:20 | INFO | Building IndexFlatIP...
+2026-06-24 08:33:20 | INFO | Indexed vectors : 100
+2026-06-24 08:33:20 | INFO | Index saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\faiss\index.faiss
+2026-06-24 08:33:20 | INFO | Finished in 0.01 seconds

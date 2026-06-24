@@ -1,0 +1,56 @@
+
+============================================================
+Paper2Fig-2026 Dataset Summary
+============================================================
+
+Total papers              : 4,433
+Total figure-caption pairs: 34,954
+
+Figures per paper
+-------------------------
+Mean                      : 8.09
+Median                    : 7.00
+Min                        : 1
+Max                        : 115
+
+Caption statistics
+-------------------------
+Mean words                : 43.58
+Median words              : 34.00
+Max words                 : 435
+
+Mean characters           : 295.81
+Median characters         : 232.00
+Max characters            : 2815
+
+Empty OCR captions        : 5
+
+Papers by field
+-------------------------
+field
+AI          874
+BIOINFO     763
+CV          268
+IMAGING     973
+ML          657
+ROBOTICS    858
+SIGNAL       40
+
+Figures by field
+-------------------------
+field
+AI          6417
+BIOINFO     6114
+CV          2425
+IMAGING     7602
+ML          5162
+ROBOTICS    6939
+SIGNAL       295
+
+Publication years
+-------------------------
+year
+2025     1996
+2026    32958
+
+============================================================

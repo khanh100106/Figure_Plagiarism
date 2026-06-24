@@ -1,0 +1,18 @@
+2026-06-24 08:45:29 | INFO | ============================================================
+2026-06-24 08:45:29 | INFO | Paper2Fig-2026 Positive Pair Mining
+2026-06-24 08:45:29 | INFO | ============================================================
+2026-06-24 08:45:29 | INFO | Embeddings : (100, 768)
+2026-06-24 08:45:29 | INFO | Metadata   : 100
+2026-06-24 08:45:29 | INFO | Index size : 100
+2026-06-24 08:45:29 | INFO | Searching nearest neighbors...
+2026-06-24 08:45:29 | INFO | Search finished.
+2026-06-24 08:45:29 | INFO | Generating Top-K candidates...
+2026-06-24 08:45:29 | INFO | Candidates : 1,065
+2026-06-24 08:45:29 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\topk_candidates.csv
+2026-06-24 08:45:29 | INFO | Filtering positive pairs...
+2026-06-24 08:45:29 | INFO | Positive pairs : 4
+2026-06-24 08:45:29 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\mining\positive_pairs.csv
+2026-06-24 08:45:29 | INFO | ============================================================
+2026-06-24 08:45:29 | INFO | Positive pairs : 4
+2026-06-24 08:45:29 | INFO | Finished in 0.03 seconds
+2026-06-24 08:45:29 | INFO | ============================================================
