@@ -1,0 +1,8 @@
+metric,value
+mean_words,43.578703438805285
+median_words,34.0
+max_words,435.0
+mean_chars,295.805372775648
+median_chars,232.0
+max_chars,2815.0
+empty_captions,5.0
