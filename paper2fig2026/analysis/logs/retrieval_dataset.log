@@ -1,0 +1,22 @@
+2026-06-25 18:08:19 | INFO | ============================================================
+2026-06-25 18:08:19 | INFO | Paper2Fig-2026 Retrieval Dataset Builder
+2026-06-25 18:08:19 | INFO | ============================================================
+2026-06-25 18:08:19 | INFO | Positive pairs : 4
+2026-06-25 18:08:19 | INFO | Hard negatives : 365
+2026-06-25 18:08:19 | INFO | Sampled positives : 4
+2026-06-25 18:08:19 | INFO | Sampled negatives : 207
+2026-06-25 18:08:19 | INFO | Pair dataset : 211
+2026-06-25 18:08:19 | INFO | Triplet dataset : 11
+2026-06-25 18:08:19 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\datasets\retrieval_pairs.csv
+2026-06-25 18:08:19 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\datasets\retrieval_triplets.csv
+2026-06-25 18:08:19 | INFO | ============================================================
+2026-06-25 18:08:19 | INFO | total_pairs: 211
+2026-06-25 18:08:19 | INFO | positive_pairs: 4
+2026-06-25 18:08:19 | INFO | negative_pairs: 207
+2026-06-25 18:08:19 | INFO | total_triplets: 11
+2026-06-25 18:08:19 | INFO | unique_pair_anchors: 55
+2026-06-25 18:08:19 | INFO | unique_triplet_anchors: 3
+2026-06-25 18:08:19 | INFO | ============================================================
+2026-06-25 18:08:19 | INFO | ============================================================
+2026-06-25 18:08:19 | INFO | Finished in 0.01 seconds
+2026-06-25 18:08:19 | INFO | ============================================================
