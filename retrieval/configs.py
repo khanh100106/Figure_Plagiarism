@@ -6,7 +6,7 @@ Project: Paper2Fig-2026
 """
 
 from pathlib import Path
-import torch
+#import torch
 
 # ============================================================
 # Project Directories
@@ -56,7 +56,8 @@ for folder in [
 # Hardware
 # ============================================================
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+#DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = 'cpu'
 
 NUM_WORKERS = 8
 
@@ -112,9 +113,6 @@ FAISS_METRIC = "InnerProduct"
 
 POSITIVE_THRESHOLD = 0.95
 
-HARD_NEGATIVE_MIN = 0.75
-
-HARD_NEGATIVE_MAX = 0.90
 
 # ============================================================
 # Random Seed
@@ -177,26 +175,7 @@ TOPK_CANDIDATE_FILE = (
     MINING_DIR / "topk_candidates.csv"
 )
 
-# ============================================================
-# Hard Negative Mining
-# ============================================================
 
-HARD_NEGATIVE_PAIR_FILE = (
-    MINING_DIR / "hard_negative_pairs.csv"
-)
-
-HARD_NEGATIVE_INFO_FILE = (
-    MINING_DIR / "hard_negative_info.json"
-)
-
-HARD_NEGATIVE_COMPLETED_FLAG = (
-    MINING_DIR / "hard_negative_completed.flag"
-)
-
-HARD_NEGATIVE_CHECKPOINT_FILE = (
-    CHECKPOINT_DIR /
-    "hard_negative_checkpoint.json"
-)
 
 # ============================================================
 # Retrieval Dataset
@@ -226,7 +205,7 @@ MAX_POSITIVES_PER_ANCHOR = 3
 
 MAX_NEGATIVES_PER_ANCHOR = 5
 
-SEED = 42
+
 
 # ============================================================
 # Mining statistic
@@ -308,4 +287,21 @@ HARD_NEGATIVE_COMPLETED_FLAG = (
 HARD_NEGATIVE_CHECKPOINT_FILE = (
     CHECKPOINT_DIR /
     "hard_negative_checkpoint.json"
+)
+
+# ============================================================
+# Mining Thresholds
+# ============================================================
+HARD_NEGATIVE_MIN = 0.75
+
+HARD_NEGATIVE_MAX = 0.90
+
+SIMILARITY_BY_TYPE_FILE = (
+    HARD_NEGATIVE_DIR /
+    "similarity_by_type.png"
+)
+
+RETRIEVAL_STATISTICS_FILE = (
+    DATASET_OUTPUT_DIR /
+    "retrieval_statistics.json"
 )

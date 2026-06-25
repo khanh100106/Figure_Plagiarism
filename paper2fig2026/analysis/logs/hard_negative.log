@@ -1,0 +1,38 @@
+2026-06-24 19:03:14 | INFO | Candidates : 1,065
+2026-06-24 19:03:35 | INFO | Candidates : 1,065
+2026-06-24 19:03:35 | INFO | Positive pairs : 4
+2026-06-24 19:03:55 | INFO | Candidates : 1,065
+2026-06-24 19:03:55 | INFO | Positive pairs : 4
+2026-06-24 19:03:55 | INFO | Removing positive pairs...
+2026-06-24 19:03:55 | INFO | Remaining candidates : 1,061
+2026-06-24 19:03:55 | INFO | Filtering similarity range...
+2026-06-24 19:03:55 | INFO | Hard negatives : 365
+2026-06-24 19:03:55 | INFO | Assigning negative types...
+2026-06-24 19:03:55 | INFO | Final hard negatives : 365
+2026-06-24 19:04:49 | INFO | Candidates : 1,065
+2026-06-24 19:04:49 | INFO | Positive pairs : 4
+2026-06-24 19:04:49 | INFO | Removing positive pairs...
+2026-06-24 19:04:49 | INFO | Remaining candidates : 1,061
+2026-06-24 19:04:49 | INFO | Filtering similarity range...
+2026-06-24 19:04:49 | INFO | Hard negatives : 365
+2026-06-24 19:04:49 | INFO | Assigning negative types...
+2026-06-24 19:04:49 | INFO | Final hard negatives : 365
+2026-06-25 13:12:56 | INFO | ============================================================
+2026-06-25 13:12:56 | INFO | Paper2Fig-2026 Hard Negative Mining
+2026-06-25 13:12:56 | INFO | ============================================================
+2026-06-25 13:12:56 | INFO | Candidates : 1,065
+2026-06-25 13:12:56 | INFO | Positive pairs : 4
+2026-06-25 13:12:56 | INFO | Removing positive pairs...
+2026-06-25 13:12:56 | INFO | Remaining candidates : 1,061
+2026-06-25 13:12:56 | INFO | Filtering similarity range...
+2026-06-25 13:12:56 | INFO | Hard negatives : 365
+2026-06-25 13:12:56 | INFO | Assigning negative types...
+2026-06-25 13:12:56 | INFO | Final hard negatives : 365
+2026-06-25 13:12:56 | INFO | Final hard negatives : 365
+2026-06-25 13:12:56 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\hard_negative\hard_negatives.csv
+2026-06-25 13:12:56 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\hard_negative\intra_paper_negatives.csv
+2026-06-25 13:12:56 | INFO | Saved : D:\Research\PhD\Plagiarism\train\paper2fig2026\analysis\hard_negative\inter_paper_negatives.csv
+2026-06-25 13:12:57 | INFO | ============================================================
+2026-06-25 13:12:57 | INFO | Hard negatives : 365
+2026-06-25 13:12:57 | INFO | Finished in 0.84 seconds
+2026-06-25 13:12:57 | INFO | ============================================================
