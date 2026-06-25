@@ -1,0 +1,14 @@
+{
+    "total_hard_negatives": 365,
+    "intra_paper": 60,
+    "inter_paper": 305,
+    "mean_similarity": 0.8077776533283599,
+    "median_similarity": 0.7996785640716553,
+    "std_similarity": 0.03955397629021654,
+    "min_similarity": 0.7503251433372498,
+    "max_similarity": 0.8981636762619019,
+    "p90": 0.8708963632583618,
+    "p95": 0.8822705030441285,
+    "p99": 0.8937970018386842,
+    "created_at": "2026-06-25T13:12:56.624655"
+}
