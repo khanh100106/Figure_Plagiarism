@@ -1,17 +1,11 @@
-import pandas as pd
+import numpy as np
 
 from retrieval.configs import (
-    MINING_DIR,
+    EMBEDDING_DIR,
 )
 
-candidate = pd.read_csv(
-    MINING_DIR / "topk_candidates.csv"
+embeddings = np.load(
+    EMBEDDING_DIR / "embeddings.npy"
 )
 
-print(candidate["similarity"].describe())
-
-print(
-    candidate["similarity"].quantile(
-        [0.90, 0.95, 0.97, 0.99]
-    )
-)
+print(embeddings.shape)

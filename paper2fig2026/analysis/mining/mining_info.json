@@ -1,6 +1,6 @@
 {
-    "positive_pairs": 4,
+    "positive_pairs": 23227,
     "threshold": 0.95,
     "top_k": 20,
-    "created_at": "2026-06-24T13:57:50.474015"
+    "created_at": "2026-06-25T20:16:53.440321"
 }

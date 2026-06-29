@@ -1,8 +1,8 @@
 {
-    "total_pairs": 211,
-    "positive_pairs": 4,
-    "negative_pairs": 207,
-    "total_triplets": 11,
-    "unique_pair_anchors": 55,
-    "unique_triplet_anchors": 3
+    "total_pairs": 75451,
+    "positive_pairs": 12447,
+    "negative_pairs": 63004,
+    "total_triplets": 8644,
+    "unique_pair_anchors": 21033,
+    "unique_triplet_anchors": 1481
 }

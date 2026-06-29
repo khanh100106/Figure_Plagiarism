@@ -1,9 +1,9 @@
 {
-    "created_at": "2026-06-25T18:08:19.545735",
-    "total_pairs": 211,
-    "positive_pairs": 4,
-    "negative_pairs": 207,
-    "total_triplets": 11,
-    "unique_pair_anchors": 55,
-    "unique_triplet_anchors": 3
+    "created_at": "2026-06-25T20:19:12.894022",
+    "total_pairs": 75451,
+    "positive_pairs": 12447,
+    "negative_pairs": 63004,
+    "total_triplets": 8644,
+    "unique_pair_anchors": 21033,
+    "unique_triplet_anchors": 1481
 }

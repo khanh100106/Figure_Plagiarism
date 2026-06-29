@@ -14,5 +14,7 @@ __pycache__/
 .env
 
 # Dataset
-paper2fig2026/captions
-paper2fig2026/figures
+paper2fig2026/
+
+# Experiment
+experiments/
