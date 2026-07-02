@@ -278,7 +278,7 @@ class CombinedDataset(Dataset):
     ) -> None:
         self.pair_dataset = pair_dataset
         self.triplet_dataset = triplet_dataset
-        self.length = max(
+        self.length = min(
             len(pair_dataset),
             len(triplet_dataset),
         )
@@ -297,15 +297,9 @@ class CombinedDataset(Dataset):
             index % len(self.triplet_dataset)
         ]
         return {
-            "pair_anchor": pair["anchor"],
-            "pair_target": pair["target"],
-            "pair_label": pair["label"],
-            "triplet_anchor": triplet["anchor"],
-            "triplet_positive": triplet["positive"],
-            "triplet_negative": triplet["negative"],
-            "pair_anchor_id": pair["anchor_id"],
-            "pair_target_id": pair["target_id"],
-            "triplet_anchor_id": triplet["anchor_id"],
-            "triplet_positive_id": triplet["positive_id"],
-            "triplet_negative_id": triplet["negative_id"],
+
+            "pair": pair,
+
+            "triplet": triplet,
+
         }

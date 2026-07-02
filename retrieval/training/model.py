@@ -13,6 +13,9 @@ from retrieval.configs import (
     DROPOUT,
     FREEZE_BACKBONE,
 )
+from retrieval.constants import (
+    CHECKPOINT_MODEL,
+)
 # ============================================================
 # Projection Head
 # ============================================================
@@ -173,20 +176,25 @@ class RetrievalModel(nn.Module):
             checkpoint,
             map_location="cpu",
         )
-        if "model" in checkpoint:
-            state_dict = checkpoint["model"]
-        else:
-            state_dict = checkpoint
+
+        if not isinstance(
+                checkpoint,
+                dict,
+        ):
+            raise TypeError(
+                "Checkpoint must be a dictionary."
+            )
+
+        state_dict = checkpoint.get(
+            CHECKPOINT_MODEL,
+            checkpoint,
+        )
+
         self.load_state_dict(
             state_dict,
             strict=strict,
         )
-        if "model" in state_dict:
-            state_dict = state_dict["model"]
-        self.load_state_dict(
-            state_dict,
-            strict=strict,
-        )
+
     # ============================================================
     # Save Checkpoint
     # ============================================================

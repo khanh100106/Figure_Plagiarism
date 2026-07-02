@@ -65,6 +65,32 @@ class MetricTracker:
         self.recall5.reset()
         self.positive_distance.reset()
         self.negative_distance.reset()
+
+    def reset_train(
+            self,
+    ) -> None:
+        """
+        Reset training metrics.
+        """
+
+        self.train_loss.reset()
+
+    def reset_validation(
+            self,
+    ) -> None:
+        """
+        Reset validation metrics.
+        """
+
+        self.val_loss.reset()
+
+        self.recall1.reset()
+
+        self.recall5.reset()
+
+        self.positive_distance.reset()
+
+        self.negative_distance.reset()
     def update_train_loss(
         self,
         loss: float,
@@ -128,6 +154,29 @@ class MetricTracker:
             "negative_distance":
                 self.negative_distance.average,
         }
+
+    def get(
+            self,
+            name: str,
+    ) -> float:
+        """
+        Get metric value by name.
+        """
+
+        if not hasattr(
+                self,
+                name,
+        ):
+            raise AttributeError(
+                f"Unknown metric: {name}"
+            )
+
+        meter = getattr(
+            self,
+            name,
+        )
+
+        return meter.average
 # ============================================================
 # Cosine Similarity
 # ============================================================
