@@ -21,3 +21,6 @@ experiments/*
 
 !paper2fig2026/metadata/*
 
+paper2fig2026/analysis/embeddings/embeddings.npy
+ paper2fig2026/analysis/faiss/index.faiss
+
