@@ -271,31 +271,51 @@ class TripletDataset(
 # Combined Dataset
 # ============================================================
 class CombinedDataset(Dataset):
+    """
+    Combined dataset used by the Trainer.
+
+    The dataset automatically cycles through the
+    smaller dataset so that every epoch always
+    covers the larger dataset completely.
+
+    This prevents wasting samples when the number
+    of pairs and triplets are different.
+    """
+
     def __init__(
         self,
         pair_dataset: PairDataset,
         triplet_dataset: TripletDataset,
     ) -> None:
+
         self.pair_dataset = pair_dataset
+
         self.triplet_dataset = triplet_dataset
-        self.length = min(
+
+        self.length = max(
             len(pair_dataset),
             len(triplet_dataset),
         )
+
     def __len__(
         self,
     ) -> int:
+
         return self.length
+
     def __getitem__(
         self,
         index: int,
     ) -> dict:
+
         pair = self.pair_dataset[
             index % len(self.pair_dataset)
         ]
+
         triplet = self.triplet_dataset[
             index % len(self.triplet_dataset)
         ]
+
         return {
 
             "pair": pair,

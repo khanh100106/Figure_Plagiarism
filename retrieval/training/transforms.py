@@ -33,13 +33,7 @@ from retrieval.configs import (
     PARTIAL_OCCLUSION_MIN,
     PARTIAL_OCCLUSION_MAX,
 )
-T.Resize(
-    (
-        IMAGE_SIZE,
-        IMAGE_SIZE,
-    ),
-    interpolation=InterpolationMode.BICUBIC,
-)
+
 # ============================================================
 # DINOv2 Normalization
 # ============================================================
@@ -165,8 +159,24 @@ class PartialOcclusion:
 # ============================================================
 # Train Transform
 # ============================================================
-def build_train_transform() -> T.Compose:
+def build_train_transform(
+    dataset_name: str = "paper2fig",
+) -> T.Compose:
     transforms = []
+    #
+    # Dataset-specific augmentation
+    #
+
+    enable_rotation = ENABLE_ROTATION
+
+    enable_color = ENABLE_COLOR_JITTER
+
+    enable_occlusion = ENABLE_PARTIAL_OCCLUSION
+
+    if dataset_name.lower() == "shape":
+        enable_rotation = False
+
+        enable_color = False
     transforms.append(
         T.Resize(
             (
@@ -182,13 +192,13 @@ def build_train_transform() -> T.Compose:
                 p=HORIZONTAL_FLIP_PROB,
             )
         )
-    if ENABLE_ROTATION:
+    if enable_rotation:
         transforms.append(
             T.RandomRotation(
                 degrees=ROTATION_DEGREES,
             )
         )
-    if ENABLE_COLOR_JITTER:
+    if enable_color:
         transforms.append(
             T.ColorJitter(
                 brightness=COLOR_BRIGHTNESS,
@@ -204,7 +214,7 @@ def build_train_transform() -> T.Compose:
                 sigma=GAUSSIAN_SIGMA,
             )
         )
-    if ENABLE_PARTIAL_OCCLUSION:
+    if enable_occlusion:
         transforms.append(
             PartialOcclusion(
                 probability=PARTIAL_OCCLUSION_PROBABILITY,
@@ -235,7 +245,9 @@ def build_train_transform() -> T.Compose:
 # ============================================================
 # Validation Transform
 # ============================================================
-def build_validation_transform() -> T.Compose:
+def build_validation_transform(
+    dataset_name: str = "paper2fig",
+) -> T.Compose:
     return T.Compose(
         [
             T.Resize(

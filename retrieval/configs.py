@@ -10,16 +10,71 @@ from pathlib import Path
 # ============================================================
 # train/
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# Dataset
-DATASET_ROOT = PROJECT_ROOT / "paper2fig2026"
-FIGURE_DIR = DATASET_ROOT / "figures"
-CAPTION_DIR = DATASET_ROOT / "captions"
-METADATA_FILE = (
-    DATASET_ROOT
-    / "metadata"
-    / "paper2fig2026_metadata.csv"
+
+# ============================================================
+# Dataset Selection
+# ============================================================
+
+TRAIN_DATASET = "paper2fig"
+
+SUPPORTED_DATASETS = {
+
+    "paper2fig": {
+
+        "root": PROJECT_ROOT / "paper2fig2026",
+
+        "figure_dir": "figures",
+
+        "caption_dir": "captions",
+
+        "metadata": "metadata/paper2fig2026_metadata.csv",
+
+        "analysis_dir": "analysis",
+
+    },
+
+    # Future datasets
+    #
+    # "docfigure": {
+    #     "root": PROJECT_ROOT / "docfigure",
+    #     "figure_dir": "figures",
+    #     "caption_dir": "captions",
+    #     "metadata": "metadata/docfigure.csv",
+    #     "analysis_dir": "analysis",
+    # },
+
+}
+
+if TRAIN_DATASET not in SUPPORTED_DATASETS:
+    raise ValueError(
+        f"Unsupported dataset: {TRAIN_DATASET}"
+    )
+
+DATASET_CONFIG = SUPPORTED_DATASETS[
+    TRAIN_DATASET
+]
+
+DATASET_ROOT = DATASET_CONFIG["root"]
+
+FIGURE_DIR = (
+    DATASET_ROOT /
+    DATASET_CONFIG["figure_dir"]
 )
-ANALYSIS_DIR = DATASET_ROOT / "analysis"
+
+CAPTION_DIR = (
+    DATASET_ROOT /
+    DATASET_CONFIG["caption_dir"]
+)
+
+METADATA_FILE = (
+    DATASET_ROOT /
+    DATASET_CONFIG["metadata"]
+)
+
+ANALYSIS_DIR = (
+    DATASET_ROOT /
+    DATASET_CONFIG["analysis_dir"]
+)
 # ============================================================
 # Output Directories
 # ============================================================
@@ -255,6 +310,15 @@ BACKBONE_NAME = "dinov2_vitb14"
 PROJECTION_DIM = 512
 DROPOUT = 0.2
 FREEZE_BACKBONE = False
+# ============================================================
+# Training
+# ============================================================
+
+TRAINING_MODE = "hybrid"
+
+# pair
+# triplet
+# hybrid
 # ============================================================
 # Loss
 # ============================================================

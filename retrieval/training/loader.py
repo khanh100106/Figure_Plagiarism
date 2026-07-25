@@ -114,68 +114,119 @@ def validate_triplets(
 # ============================================================
 def load_pairs(
     logger: Logger,
+    pair_file=RETRIEVAL_PAIR_FILE,
 ) -> pd.DataFrame:
     """
     Load retrieval pair dataset.
     """
+
     logger.info(
         "Loading retrieval pairs..."
     )
+
     pairs = pd.read_csv(
-        RETRIEVAL_PAIR_FILE,
+        pair_file,
     )
+
     validate_pairs(
         pairs,
     )
+
     logger.info(
         "Pairs : %s",
         f"{len(pairs):,}",
     )
+
     return pairs
 def load_triplets(
     logger: Logger,
+    triplet_file=RETRIEVAL_TRIPLET_FILE,
 ) -> pd.DataFrame:
     """
     Load retrieval triplet dataset.
     """
+
     logger.info(
         "Loading retrieval triplets..."
     )
+
     triplets = pd.read_csv(
-        RETRIEVAL_TRIPLET_FILE,
+        triplet_file,
     )
+
     validate_triplets(
         triplets,
     )
+
     logger.info(
         "Triplets : %s",
         f"{len(triplets):,}",
     )
+
     return triplets
 # ============================================================
 # Convenience API
 # ============================================================
 def load_training_dataset(
     logger: Logger,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    pair_file=RETRIEVAL_PAIR_FILE,
+    triplet_file=RETRIEVAL_TRIPLET_FILE,
+):
     """
-    Load pair and triplet datasets.
+    Load retrieval training datasets.
+
+    Parameters
+    ----------
+    pair_file
+        CSV containing retrieval pairs.
+
+    triplet_file
+        CSV containing retrieval triplets.
+
     Returns
     -------
     tuple
         (pairs, triplets)
     """
+
     logger.info("=" * 60)
-    logger.info("Loading Retrieval Training Dataset")
+
+    logger.info(
+        "Loading Retrieval Training Dataset"
+    )
+
     logger.info("=" * 60)
-    pairs = load_pairs(logger)
-    triplets = load_triplets(logger)
+
+    pairs = load_pairs(
+
+        logger,
+
+        pair_file,
+
+    )
+
+    triplets = load_triplets(
+
+        logger,
+
+        triplet_file,
+
+    )
+
     logger.info("=" * 60)
-    logger.info("Dataset validation passed.")
+
+    logger.info(
+        "Dataset validation passed."
+    )
+
     logger.info("=" * 60)
+
     return (
+
         pairs,
+
         triplets,
+
     )
 def validate_metadata(
     metadata: pd.DataFrame,
@@ -199,18 +250,27 @@ def validate_metadata(
         )
 def load_figures_metadata(
     logger: Logger,
+    metadata_file=FIGURE_METADATA_FILE,
 ) -> pd.DataFrame:
+    """
+    Load figure metadata.
+    """
+
     logger.info(
         "Loading figures metadata..."
     )
+
     metadata = pd.read_csv(
-        FIGURE_METADATA_FILE,
+        metadata_file,
     )
+
     validate_metadata(
         metadata,
     )
+
     logger.info(
         "Figures : %s",
         f"{len(metadata):,}",
     )
+
     return metadata

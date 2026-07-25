@@ -47,21 +47,21 @@ class Trainer:
     """
 
     def __init__(
-        self,
-        *,
-        model: nn.Module,
-        criterion: nn.Module,
-        optimizer,
-        scheduler,
-        logger: Logger,
-        metric_tracker: MetricTracker,
-        early_stopping: EarlyStopping,
-        train_loader,
-        val_loader,
-        experiment_dir: Path,
-        device: torch.device,
-        use_amp: bool = True,
-        gradient_clip: float | None = None,
+            self,
+            *,
+            model: nn.Module,
+            criterion: nn.Module,
+            optimizer,
+            scheduler,
+            logger: Logger,
+            metric_tracker: MetricTracker,
+            early_stopping: EarlyStopping,
+            train_loader,
+            val_loader,
+            experiment_dir: Path,
+            device: torch.device,
+            use_amp: bool = True,
+            gradient_clip: float | None = None,
     ) -> None:
 
         self.model = model
@@ -84,55 +84,36 @@ class Trainer:
 
         self.experiment_dir = experiment_dir
 
-        self.device = device
-
-        self.use_amp = (
-
-            use_amp
-
-            and
-
-            torch.cuda.is_available()
-
-        )
-
-        self.gradient_clip = gradient_clip
-
         #
-        # AMP
+        # Device
         #
 
         self.device = device
 
         self.amp_device = self.device.type
 
+        #
+        # Automatic Mixed Precision
+        #
+
         self.use_amp = (
-
                 use_amp
-
-                and
-
-                self.device.type == "cuda"
-
+                and self.device.type == "cuda"
         )
-
-        #
-        # AMP
-        #
 
         self.scaler = (
-
             GradScaler(
-
                 self.amp_device,
-
             )
-
             if self.use_amp
-
             else None
-
         )
+
+        #
+        # Gradient
+        #
+
+        self.gradient_clip = gradient_clip
 
         #
         # Training State
@@ -151,9 +132,7 @@ class Trainer:
         #
 
         self.model.to(
-
             self.device,
-
         )
 
         self.logger.log(
