@@ -1,8 +1,0 @@
-{
-    "dataset": "Paper2Fig-2026",
-    "backbone": "dinov2",
-    "model_name": "dinov2_vitb14",
-    "embedding_dim": 768,
-    "num_embeddings": 34954,
-    "created_at": "2026-06-25T19:13:29.568552"
-}

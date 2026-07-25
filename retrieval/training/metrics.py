@@ -65,31 +65,23 @@ class MetricTracker:
         self.recall5.reset()
         self.positive_distance.reset()
         self.negative_distance.reset()
-
     def reset_train(
             self,
     ) -> None:
         """
         Reset training metrics.
         """
-
         self.train_loss.reset()
-
     def reset_validation(
             self,
     ) -> None:
         """
         Reset validation metrics.
         """
-
         self.val_loss.reset()
-
         self.recall1.reset()
-
         self.recall5.reset()
-
         self.positive_distance.reset()
-
         self.negative_distance.reset()
     def update_train_loss(
         self,
@@ -109,20 +101,25 @@ class MetricTracker:
             loss,
             batch_size,
         )
+
     def update_recall(
-        self,
-        recall1: float,
-        recall5: float,
-        batch_size: int,
+            self,
+            recall1: float,
+            recall5: float,
     ) -> None:
-        self.recall1.update(
-            recall1,
-            batch_size,
-        )
-        self.recall5.update(
-            recall5,
-            batch_size,
-        )
+        """
+        Update retrieval metrics.
+
+        Recall is computed once over the entire
+        validation set, therefore it does not
+        require batch-size weighting.
+        """
+
+        self.recall1.value = recall1
+        self.recall1.average = recall1
+
+        self.recall5.value = recall5
+        self.recall5.average = recall5
     def update_distances(
         self,
         positive_distance: float,
@@ -154,7 +151,6 @@ class MetricTracker:
             "negative_distance":
                 self.negative_distance.average,
         }
-
     def get(
             self,
             name: str,
@@ -162,7 +158,6 @@ class MetricTracker:
         """
         Get metric value by name.
         """
-
         if not hasattr(
                 self,
                 name,
@@ -170,108 +165,12 @@ class MetricTracker:
             raise AttributeError(
                 f"Unknown metric: {name}"
             )
-
         meter = getattr(
             self,
             name,
         )
-
         return meter.average
-# ============================================================
-# Cosine Similarity
-# ============================================================
-def compute_cosine_similarity(
-    embeddings1: torch.Tensor,
-    embeddings2: torch.Tensor,
-) -> torch.Tensor:
-    """
-    Compute cosine similarity.
-    Parameters
-    ----------
-    embeddings1 : torch.Tensor
-    embeddings2 : torch.Tensor
-    Returns
-    -------
-    torch.Tensor
-    """
-    embeddings1 = F.normalize(
-        embeddings1,
-        p=2,
-        dim=1,
-    )
-    embeddings2 = F.normalize(
-        embeddings2,
-        p=2,
-        dim=1,
-    )
-    similarity = torch.sum(
-        embeddings1 * embeddings2,
-        dim=1,
-    )
-    return similarity
-# ============================================================
-# Embedding Distance
-# ============================================================
-def compute_embedding_distance(
-    embeddings1: torch.Tensor,
-    embeddings2: torch.Tensor,
-) -> torch.Tensor:
-    """
-    Compute Euclidean distance.
-    """
-    return torch.norm(
-        embeddings1 - embeddings2,
-        dim=1,
-    )
-# ============================================================
-# Recall@K
-# ============================================================
-def compute_recall_at_k(
-    query_embeddings: torch.Tensor,
-    target_embeddings: torch.Tensor,
-    k: int = 1,
-) -> float:
-    """
-    Compute Recall@K.
-    Parameters
-    ----------
-    query_embeddings : torch.Tensor
-    target_embeddings : torch.Tensor
-    k : int
-    Returns
-    -------
-    float
-    """
-    query_embeddings = F.normalize(
-        query_embeddings,
-        p=2,
-        dim=1,
-    )
-    target_embeddings = F.normalize(
-        target_embeddings,
-        p=2,
-        dim=1,
-    )
-    similarity = torch.matmul(
-        query_embeddings,
-        target_embeddings.T,
-    )
-    indices = torch.topk(
-        similarity,
-        k=k,
-        dim=1,
-    ).indices
-    ground_truth = torch.arange(
-        query_embeddings.size(0),
-        device=query_embeddings.device,
-    ).unsqueeze(1)
-    correct = (
-        indices == ground_truth
-    ).any(
-        dim=1,
-    )
-    recall = correct.float().mean()
-    return recall.item()
+
 # ============================================================
 # Summary
 # ============================================================

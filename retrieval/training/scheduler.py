@@ -24,11 +24,14 @@ def learning_rate_lambda(
         ) / float(
             WARMUP_EPOCHS
         )
-    progress = (
-        epoch - WARMUP_EPOCHS
-    ) / (
-        NUM_EPOCHS - WARMUP_EPOCHS
+    denominator = max(
+        1,
+        NUM_EPOCHS - WARMUP_EPOCHS,
     )
+
+    progress = (
+                       epoch - WARMUP_EPOCHS
+               ) / denominator
     cosine = 0.5 * (
         1.0
         + math.cos(
