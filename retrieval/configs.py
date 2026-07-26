@@ -98,8 +98,13 @@ for folder in [
 # ============================================================
 # Hardware
 # ============================================================
-#DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DEVICE = 'cpu'
+
+import torch
+
+DEVICE = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+
 NUM_WORKERS = 8
 PIN_MEMORY = True
 # ============================================================
@@ -353,3 +358,8 @@ MIN_LEARNING_RATE = 1e-6
 # Experiments Directories
 # ============================================================
 EXPERIMENT_DIR = PROJECT_ROOT / "experiments"
+# ============================================================
+# Resume
+# ============================================================
+
+RESUME_TRAINING = False

@@ -19,8 +19,6 @@ Nguyen Khanh
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from torch.utils.data import Dataset
@@ -221,21 +219,13 @@ def build_validation_dataset(
     """
     Build validation dataset.
 
-    Notes
-    -----
-    Validation split is not implemented yet.
-
-    Parameters
-    ----------
-    transform : callable, optional
-        Image transform.
-
-    Raises
-    ------
-    NotImplementedError
+    Temporary:
+        use the training dataset until
+        validation split is implemented.
     """
-    raise NotImplementedError(
-        "Validation dataset is not implemented yet."
+
+    return _build_dataset(
+        transform=transform,
     )
 
 

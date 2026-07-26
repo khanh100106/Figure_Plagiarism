@@ -44,3 +44,4 @@ def build_model() -> RetrievalModel:
     raise ValueError(
         f"Unsupported backbone: {BACKBONE_NAME}"
     )
+
