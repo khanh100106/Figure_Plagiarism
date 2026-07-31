@@ -19,7 +19,7 @@ from retrieval.configs import (
     BACKBONE_NAME,
 )
 
-from retrieval.models.model import (
+from retrieval.modeling.model import (
     RetrievalModel,
 )
 

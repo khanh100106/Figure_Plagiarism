@@ -4,7 +4,7 @@ Paper2Fig-2026 Retrieval Framework
 Author: Nguyen Khanh
 """
 from retrieval.configs import BACKBONE
-from retrieval.backbones import (
+from retrieval.modeling.backbones import (
     DINOv2Extractor,
 )
 class EmbeddingExtractor:

@@ -28,7 +28,7 @@ from retrieval.training.dataset_factory import (
     build_train_dataset,
     build_validation_dataset,
 )
-from retrieval.models.model import (
+from retrieval.modeling.model import (
     RetrievalModel,
 )
 from retrieval.training.loss import (

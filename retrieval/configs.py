@@ -108,13 +108,6 @@ DEVICE = torch.device(
 NUM_WORKERS = 8
 PIN_MEMORY = True
 # ============================================================
-# Model
-# ============================================================
-BACKBONE = "dinov2"
-MODEL_NAME = "dinov2_vitb14"
-IMAGE_SIZE = 518
-EMBEDDING_DIM = 768
-# ============================================================
 # Embedding Extraction
 # ============================================================
 BATCH_SIZE = 64
@@ -308,13 +301,7 @@ ENABLE_PARTIAL_OCCLUSION = True
 PARTIAL_OCCLUSION_PROBABILITY = 0.30
 PARTIAL_OCCLUSION_MIN = 0.10
 PARTIAL_OCCLUSION_MAX = 0.30
-# ============================================================
-# Model
-# ============================================================
-BACKBONE_NAME = "dinov2_vitb14"
-PROJECTION_DIM = 512
-DROPOUT = 0.2
-FREEZE_BACKBONE = False
+
 # ============================================================
 # Training
 # ============================================================
@@ -363,3 +350,88 @@ EXPERIMENT_DIR = PROJECT_ROOT / "experiments"
 # ============================================================
 
 RESUME_TRAINING = False
+# ============================================================
+# Image Backbone
+# ============================================================
+
+BACKBONE = "dinov2"
+
+SUPPORTED_BACKBONES = {
+
+    "dinov2": {
+
+        "model_name": "dinov2_vitb14",
+
+        "feature_dim": 768,
+
+    },
+
+    # "clip": {...}
+    # "siglip": {...}
+
+}
+
+BACKBONE_CONFIG = SUPPORTED_BACKBONES[
+    BACKBONE
+]
+
+BACKBONE_MODEL = BACKBONE_CONFIG["model_name"]
+
+IMAGE_FEATURE_DIM = BACKBONE_CONFIG["feature_dim"]
+
+PRETRAINED = True
+
+# ============================================================
+# Text Encoder
+# ============================================================
+
+TEXT_ENCODER = "scibert"
+
+SUPPORTED_TEXT_ENCODERS = {
+
+    "scibert": {
+
+        "model_name": "allenai/scibert_scivocab_uncased",
+
+        "feature_dim": 768,
+
+    },
+
+    "specter2": {
+
+        "model_name": "allenai/specter2_base",
+
+        "feature_dim": 768,
+
+    },
+
+}
+
+if TEXT_ENCODER not in SUPPORTED_TEXT_ENCODERS:
+
+    raise ValueError(
+        f"Unsupported text encoder: {TEXT_ENCODER}"
+    )
+
+TEXT_CONFIG = SUPPORTED_TEXT_ENCODERS[
+    TEXT_ENCODER
+]
+
+TEXT_MODEL = TEXT_CONFIG[
+    "model_name"
+]
+
+TEXT_FEATURE_DIM = TEXT_CONFIG[
+    "feature_dim"
+]
+FREEZE_TEXT_ENCODER = False
+
+# ============================================================
+# Embedding Head
+# ============================================================
+
+HEAD = "projection"
+
+PROJECTION_DIM = 512
+
+DROPOUT = 0.1
