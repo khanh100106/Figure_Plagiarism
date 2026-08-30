@@ -11,7 +11,7 @@ import numpy as np
 from retrieval.configs import (
     EMBEDDING_DIR,
     LOG_DIR,
-    EMBEDDING_DIM,
+    PROJECTION_DIM,
     FAISS_INDEX_FILE,
     FAISS_INFO_FILE,
     FAISS_COMPLETED_FLAG,
@@ -50,7 +50,7 @@ def validate_embeddings(
         raise ValueError(
             "Embedding matrix must be 2D."
         )
-    if embeddings.shape[1] != EMBEDDING_DIM:
+    if embeddings.shape[1] != PROJECTION_DIM:
         raise ValueError(
             "Embedding dimension mismatch."
         )
@@ -79,7 +79,7 @@ def build_index(
         f"Building {FAISS_INDEX_TYPE}..."
     )
     index = faiss.IndexFlatIP(
-        EMBEDDING_DIM
+        PROJECTION_DIM,
     )
     index.add(
         embeddings
@@ -117,7 +117,7 @@ def save_faiss_info(
     info = {
         "index_type": FAISS_INDEX_TYPE,
         "metric": FAISS_METRIC,
-        "dimension": EMBEDDING_DIM,
+        "dimension": PROJECTION_DIM,
         "vectors": index.ntotal,
         "created_at": datetime.now().isoformat(),
         "faiss_version": faiss.__version__,

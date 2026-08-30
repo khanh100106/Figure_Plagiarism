@@ -21,7 +21,7 @@ from transformers import (
     AutoModel,
 )
 
-from retrieval.modeling.text_encoders.base import (
+from retrieval.modeling.text_encoders.text_encoders_base import (
     BaseTextEncoder,
 )
 

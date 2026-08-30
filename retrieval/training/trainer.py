@@ -200,42 +200,57 @@ class Trainer:
     ) -> Dict[str, Any]:
         """
         Forward one batch.
-        Supports:
-            - pair only
-            - triplet only
-            - pair + triplet
+
+        Current training configuration:
+            contrastive pair retrieval.
+
+        Expected batch:
+            {
+                "pair": {
+                    "anchor": Tensor,
+                    "target": Tensor,
+                    "label": Tensor,
+                }
+            }
         """
+
         outputs: Dict[str, Any] = {}
-        #
-        # Pair
-        #
+
         if "pair" in batch:
             pair = batch["pair"]
+
+            anchor_embeddings, target_embeddings = self.model(
+                pair["anchor"],
+                pair["target"],
+            )
+
             outputs["pair"] = {
-                "anchor": self.model(
-                    pair["anchor"],
-                ),
-                "target": self.model(
-                    pair["target"],
-                ),
+                "anchor": anchor_embeddings,
+                "target": target_embeddings,
                 "label": pair["label"],
             }
-        #
-        # Triplet
-        #
+
         if "triplet" in batch:
             triplet = batch["triplet"]
+
+            anchor_embeddings = self.model.encode_image(
+                triplet["anchor"],
+            )
+
+            positive_embeddings = self.model.encode_image(
+                triplet["positive"],
+            )
+
+            negative_embeddings = self.model.encode_image(
+                triplet["negative"],
+            )
+
             outputs["triplet"] = {
-                "anchor": self.model(
-                    triplet["anchor"],
-                ),
-                "positive": self.model(
-                    triplet["positive"],
-                ),
-                "negative": self.model(
-                    triplet["negative"],
-                ),
+                "anchor": anchor_embeddings,
+                "positive": positive_embeddings,
+                "negative": negative_embeddings,
             }
+
         return outputs
     # =====================================================
     # Compute Loss

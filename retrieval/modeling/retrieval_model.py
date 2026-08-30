@@ -1,8 +1,10 @@
 """
 Paper2Fig-2026 Retrieval Framework
 
-Dual Encoder Retrieval Model
-----------------------------
+Figure Plagiarism Retrieval Model
+----------------------------------
+
+Siamese image encoder for figure-to-figure retrieval.
 
 Author
 ------
@@ -14,34 +16,29 @@ from __future__ import annotations
 import torch
 from torch import nn
 
-from retrieval.modeling.backbones.factory import (
+from retrieval.modeling.backbones.backbones_factory import (
     build_backbone,
 )
 
-from retrieval.modeling.text_encoders.factory import (
-    build_text_encoder,
-)
-
-from retrieval.modeling.heads.factory import (
+from retrieval.modeling.heads.heads_factory import (
     build_head,
 )
 
 
-class RetrievalModel(
-    nn.Module,
-):
+class RetrievalModel(nn.Module):
     """
-    Dual-encoder retrieval model.
+    Siamese image retrieval model.
 
+    Architecture
+    ------------
     Image
-        -> Backbone
+        -> DINOv2 Backbone
         -> Projection Head
-        -> Image Embedding
+        -> L2-normalized Embedding
 
-    Caption
-        -> Text Encoder
-        -> Projection Head
-        -> Text Embedding
+    The same encoder is shared by anchor and target images.
+
+    This model is designed for figure plagiarism retrieval.
     """
 
     def __init__(
@@ -51,24 +48,18 @@ class RetrievalModel(
         super().__init__()
 
         # --------------------------------------------------
-        # Image branch
+        # Shared image encoder
         # --------------------------------------------------
 
-        self.image_backbone = build_backbone()
+        self.backbone = build_backbone()
 
-        self.image_head = build_head(
-            input_dim=self.image_backbone.feature_dim,
+        self.head = build_head(
+            input_dim=self.backbone.feature_dim,
         )
 
-        # --------------------------------------------------
-        # Text branch
-        # --------------------------------------------------
-
-        self.text_encoder = build_text_encoder()
-
-        self.text_head = build_head(
-            input_dim=self.text_encoder.feature_dim,
-        )
+    # ======================================================
+    # Encode image
+    # ======================================================
 
     def encode_image(
         self,
@@ -76,75 +67,89 @@ class RetrievalModel(
     ) -> torch.Tensor:
         """
         Encode images into retrieval embeddings.
+
+        Parameters
+        ----------
+        images : torch.Tensor
+            Shape:
+                [B, 3, H, W]
+
+        Returns
+        -------
+        torch.Tensor
+            Shape:
+                [B, embedding_dim]
         """
 
-        image_features = self.image_backbone(
+        features = self.backbone(
             images,
         )
 
-        image_embeddings = self.image_head(
-            image_features,
+        embeddings = self.head(
+            features,
         )
 
-        return image_embeddings
+        return embeddings
 
-    def encode_text(
-        self,
-        captions: list[str],
-    ) -> torch.Tensor:
-        """
-        Encode captions into retrieval embeddings.
-        """
-
-        text_features = self.text_encoder(
-            captions,
-        )
-
-        text_embeddings = self.text_head(
-            text_features,
-        )
-
-        return text_embeddings
+    # ======================================================
+    # Forward
+    # ======================================================
 
     def forward(
         self,
-        images: torch.Tensor,
-        captions: list[str],
+        anchor_images: torch.Tensor,
+        target_images: torch.Tensor,
     ) -> tuple[
         torch.Tensor,
         torch.Tensor,
     ]:
         """
-        Encode images and captions.
+        Encode anchor and target figures.
+
+        Parameters
+        ----------
+        anchor_images : torch.Tensor
+            Anchor figures.
+
+        target_images : torch.Tensor
+            Target figures.
 
         Returns
         -------
         tuple
-            (image_embeddings, text_embeddings)
+            (
+                anchor_embeddings,
+                target_embeddings,
+            )
         """
 
-        image_embeddings = self.encode_image(
-            images,
+        anchor_embeddings = self.encode_image(
+            anchor_images,
         )
 
-        text_embeddings = self.encode_text(
-            captions,
+        target_embeddings = self.encode_image(
+            target_images,
         )
 
         return (
-            image_embeddings,
-            text_embeddings,
+            anchor_embeddings,
+            target_embeddings,
         )
+
+    # ======================================================
+    # Embedding dimension
+    # ======================================================
 
     @property
     def embedding_dim(
         self,
     ) -> int:
-        """
-        Retrieval embedding dimension.
-        """
 
-        return self.image_head.embedding_dim
+        return self.head.embedding_dim
+
+    # ======================================================
+    # Representation
+    # ======================================================
 
     def __repr__(
         self,
@@ -152,8 +157,7 @@ class RetrievalModel(
 
         return (
             f"{self.__class__.__name__}(\n"
-            f"  image_backbone={self.image_backbone.name},\n"
-            f"  text_encoder={self.text_encoder.name},\n"
+            f"  backbone={self.backbone.name},\n"
             f"  embedding_dim={self.embedding_dim}\n"
             f")"
         )

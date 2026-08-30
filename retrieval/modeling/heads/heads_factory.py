@@ -19,7 +19,7 @@ from retrieval.configs import (
     DROPOUT,
 )
 
-from retrieval.modeling.heads.base import (
+from retrieval.modeling.heads.heads_base import (
     BaseHead,
 )
 

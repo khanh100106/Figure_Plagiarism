@@ -1,24 +1,55 @@
 """
-Embedding Factory
 Paper2Fig-2026 Retrieval Framework
-Author: Nguyen Khanh
+
+Embedding Extractor
+-------------------
+
+Wrapper for image feature extraction.
+
+Author
+------
+Nguyen Khanh
 """
-from retrieval.configs import BACKBONE
-from retrieval.modeling.backbones import (
-    DINOv2Extractor,
+
+from __future__ import annotations
+
+import torch
+
+from retrieval.modeling.backbones.backbones_factory import (
+    build_backbone,
 )
+
+
 class EmbeddingExtractor:
     """
-    Factory class for embedding backbones.
-    Usage
-    -----
-    extractor = EmbeddingExtractor()
-    embeddings = extractor.extract(images)
+    Extract image features using the configured backbone.
     """
-    def __new__(cls):
-        backbone = BACKBONE.lower()
-        if backbone == "dinov2":
-            return DINOv2Extractor()
-        raise ValueError(
-            f"Unsupported backbone: {BACKBONE}"
+
+    def __init__(
+        self,
+    ) -> None:
+
+        self.backbone = build_backbone()
+
+        self.backbone.eval()
+
+    @torch.no_grad()
+    def extract(
+        self,
+        images: torch.Tensor,
+    ) -> torch.Tensor:
+        """
+        Extract backbone features.
+
+        Parameters
+        ----------
+        images : torch.Tensor
+
+        Returns
+        -------
+        torch.Tensor
+        """
+
+        return self.backbone(
+            images,
         )

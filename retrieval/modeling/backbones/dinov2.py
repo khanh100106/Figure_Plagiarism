@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import torch
 
-from retrieval.modeling.backbones.base import (
+from retrieval.modeling.backbones.backbones_base import (
     BaseBackbone,
 )
 

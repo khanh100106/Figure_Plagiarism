@@ -7,8 +7,8 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from retrieval.configs import (
-    BACKBONE_NAME,
-    EMBEDDING_DIM,
+    BACKBONE_MODEL,
+    IMAGE_FEATURE_DIM,
     PROJECTION_DIM,
     DROPOUT,
     FREEZE_BACKBONE,
@@ -65,10 +65,10 @@ class RetrievalModel(nn.Module):
         super().__init__()
         self.backbone = torch.hub.load(
             "facebookresearch/dinov2",
-            BACKBONE_NAME,
+            BACKBONE_MODEL,
         )
         self.projection = ProjectionHead(
-            input_dim=EMBEDDING_DIM,
+            input_dim=IMAGE_FEATURE_DIM,
             output_dim=PROJECTION_DIM,
             dropout=DROPOUT,
         )

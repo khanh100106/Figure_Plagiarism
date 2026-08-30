@@ -17,7 +17,7 @@ from retrieval.configs import (
     TEXT_ENCODER,
 )
 
-from retrieval.modeling.text_encoders.base import (
+from retrieval.modeling.text_encoders.text_encoders_base import (
     BaseTextEncoder,
 )
 

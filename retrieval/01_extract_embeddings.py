@@ -6,7 +6,7 @@ Author: Nguyen Khanh
 import json
 from datetime import datetime
 import time
-from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -16,8 +16,8 @@ from retrieval.configs import (
     LOG_DIR,
     SAVE_EVERY,
     BACKBONE,
-    MODEL_NAME,
-    EMBEDDING_DIM,
+    BACKBONE_MODEL,
+    PROJECTION_DIM,
 )
 from retrieval.dataset import (
     FigureDataset,
@@ -315,8 +315,8 @@ def save_embedding_info():
     info = {
         "dataset": "Paper2Fig-2026",
         "backbone": BACKBONE,
-        "model_name": MODEL_NAME,
-        "embedding_dim": EMBEDDING_DIM,
+        "model_name": BACKBONE_MODEL,
+        "embedding_dim": PROJECTION_DIM,
         "num_embeddings": len(
             pd.read_csv(
                 EMBEDDING_DIR / "embedding_index.csv"

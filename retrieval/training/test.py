@@ -1,279 +1,530 @@
-"""
-Paper2Fig-2026
+from __future__ import annotations
 
-Test Early Stopping
-"""
+import os
+import subprocess
+import sys
+import tempfile
+import textwrap
 
-from retrieval.training.early_stopping import EarlyStopping
 
-from retrieval.constants import (
-    METRIC_RECALL1,
-    DIRECTION_MAX,
-)
+PYTHON = sys.executable
 
-# ============================================================
-# Create
-# ============================================================
 
-print("=" * 80)
-print("Create EarlyStopping")
-print("=" * 80)
+def run_phase(name: str, code: str):
 
-early = EarlyStopping(
+    print("=" * 70, flush=True)
+    print(f"PHASE {name}", flush=True)
+    print("=" * 70, flush=True)
 
-    enabled=True,
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".py",
+        delete=False,
+        encoding="utf-8",
+    ) as f:
 
-    monitor=METRIC_RECALL1,
+        f.write(textwrap.dedent(code))
+        script = f.name
 
-    direction=DIRECTION_MAX,
+    try:
 
-    patience=3,
+        result = subprocess.run(
+            [PYTHON, script],
+            capture_output=True,
+            text=True,
+        )
 
-    delta=1e-4,
+        print(
+            result.stdout,
+            end="",
+            flush=True,
+        )
 
-)
+        if result.stderr:
 
-print(early.state_dict())
+            print(
+                result.stderr,
+                end="",
+                flush=True,
+            )
 
-# ============================================================
-# Improvement
-# ============================================================
+        print(
+            f"\nReturn code: {result.returncode}",
+            flush=True,
+        )
 
-print()
-print("=" * 80)
-print("Improvement")
-print("=" * 80)
+        if result.returncode == 0:
 
-scores = [
+            print(
+                f"[PASS] PHASE {name}",
+                flush=True,
+            )
 
-    0.80,
+            return True
 
-    0.85,
+        print(
+            f"[FAIL] PHASE {name}",
+            flush=True,
+        )
 
-    0.90,
+        return False
 
-]
+    finally:
 
-for epoch, score in enumerate(
+        try:
+            os.remove(script)
+        except OSError:
+            pass
 
-    scores,
 
-    start=1,
-
-):
-
-    result = early.step(
-
-        epoch=epoch,
-
-        metrics={
-
-            METRIC_RECALL1: score,
-
-        },
-
-    )
-
-    print(
-
-        epoch,
-
-        score,
-
-        result,
-
-    )
-
-# ============================================================
-# Patience
-# ============================================================
-
-print()
-print("=" * 80)
-print("Patience")
-print("=" * 80)
-
-scores = [
-
-    0.90001,
-
-    0.90002,
-
-    0.90001,
-
-    0.90000,
-
-]
-
-for epoch, score in enumerate(
-
-    scores,
-
-    start=4,
-
-):
-
-    result = early.step(
-
-        epoch=epoch,
-
-        metrics={
-
-            METRIC_RECALL1: score,
-
-        },
-
-    )
+def main():
 
     print(
-
-        epoch,
-
-        score,
-
-        result,
-
+        "STEP 4C-6 ISOLATED NATIVE CRASH DIAGNOSTIC",
+        flush=True,
     )
 
-    if result["stop"]:
+    # ======================================================
+    # A — imports
+    # ======================================================
 
-        print()
+    if not run_phase(
+        "A — IMPORTS",
+        """
+        print("START", flush=True)
 
-        print("Early Stop Triggered")
+        import torch
+        print("[PASS] torch", flush=True)
 
-        break
+        from retrieval.configs import DEVICE
+        print("[PASS] configs", flush=True)
 
-# ============================================================
-# State Dict
-# ============================================================
+        from retrieval.training.training_dataset import PairTrainingDataset
+        print("[PASS] training_dataset", flush=True)
 
-print()
-print("=" * 80)
-print("State Dict")
-print("=" * 80)
+        from retrieval.modeling.retrieval_model import RetrievalModel
+        print("[PASS] retrieval_model", flush=True)
 
-state = early.state_dict()
+        from retrieval.training.loss import build_loss
+        print("[PASS] loss", flush=True)
 
-print(state)
+        print("DONE", flush=True)
+        """,
+    ):
+        return
 
-# ============================================================
-# Resume
-# ============================================================
+    # ======================================================
+    # B — dataset + batch
+    # ======================================================
 
-print()
-print("=" * 80)
-print("Resume")
-print("=" * 80)
+    if not run_phase(
+        "B — REAL BATCH",
+        """
+        import torch
+        from torch.utils.data import DataLoader
+        from retrieval.training.training_dataset import PairTrainingDataset
 
-early2 = EarlyStopping(
+        print("Creating dataset", flush=True)
 
-    enabled=True,
+        dataset = PairTrainingDataset(train=True)
 
-    monitor=METRIC_RECALL1,
+        print(
+            f"[PASS] dataset = {len(dataset)}",
+            flush=True,
+        )
 
-    direction=DIRECTION_MAX,
+        print("Creating DataLoader", flush=True)
 
-)
+        loader = DataLoader(
+            dataset,
+            batch_size=2,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=False,
+        )
 
-early2.load_state_dict(
+        print("[PASS] DataLoader", flush=True)
 
-    state,
+        print("Loading batch", flush=True)
 
-)
+        batch = next(iter(loader))
 
-print(
+        print("[PASS] batch", flush=True)
 
-    early2.state_dict()
+        print(
+            batch["anchor_image"].shape,
+            flush=True,
+        )
 
-)
+        print(
+            batch["target_image"].shape,
+            flush=True,
+        )
 
-# ============================================================
-# Reset
-# ============================================================
+        print("DONE", flush=True)
+        """,
+    ):
+        return
 
-print()
-print("=" * 80)
-print("Reset")
-print("=" * 80)
+    # ======================================================
+    # C — model CUDA
+    # ======================================================
 
-early2.reset()
+    if not run_phase(
+        "C — MODEL CUDA",
+        """
+        import torch
+        from retrieval.configs import DEVICE
+        from retrieval.modeling.retrieval_model import RetrievalModel
 
-print(
+        print("Creating model", flush=True)
 
-    early2.state_dict()
+        model = RetrievalModel()
 
-)
+        print("[PASS] model", flush=True)
 
-# ============================================================
-# Threshold
-# ============================================================
+        print("Moving model to CUDA", flush=True)
 
-print()
-print("=" * 80)
-print("Threshold")
-print("=" * 80)
+        model = model.to(DEVICE)
 
-early3 = EarlyStopping(
+        torch.cuda.synchronize()
 
-    enabled=True,
+        print("[PASS] CUDA", flush=True)
 
-    monitor=METRIC_RECALL1,
+        print("DONE", flush=True)
+        """,
+    ):
+        return
 
-    direction=DIRECTION_MAX,
+    # ======================================================
+    # D — REAL BATCH + FORWARD
+    # ======================================================
 
-    threshold=0.95,
+    if not run_phase(
+        "D — REAL FORWARD",
+        """
+        import torch
+        from torch.utils.data import DataLoader
 
-)
+        from retrieval.configs import DEVICE
+        from retrieval.training.training_dataset import PairTrainingDataset
+        from retrieval.modeling.retrieval_model import RetrievalModel
 
-scores = [
+        print("Dataset", flush=True)
 
-    0.91,
+        dataset = PairTrainingDataset(train=True)
 
-    0.93,
+        loader = DataLoader(
+            dataset,
+            batch_size=2,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=False,
+        )
 
-    0.95,
+        print("Loading real batch", flush=True)
 
-]
+        batch = next(iter(loader))
 
-for epoch, score in enumerate(
+        print("[PASS] real batch", flush=True)
 
-    scores,
+        model = RetrievalModel()
 
-    start=1,
+        print("[PASS] model", flush=True)
 
-):
+        model = model.to(DEVICE)
 
-    result = early3.step(
+        model.train()
 
-        epoch=epoch,
+        torch.cuda.synchronize()
 
-        metrics={
+        print("[PASS] model CUDA", flush=True)
 
-            METRIC_RECALL1: score,
+        anchor = batch["anchor_image"].to(
+            DEVICE,
+            non_blocking=False,
+        )
 
-        },
+        target = batch["target_image"].to(
+            DEVICE,
+            non_blocking=False,
+        )
 
+        torch.cuda.synchronize()
+
+        print("[PASS] batch CUDA", flush=True)
+
+        print("ANCHOR FORWARD START", flush=True)
+
+        anchor_embedding = model.encode_image(anchor)
+
+        torch.cuda.synchronize()
+
+        print(
+            "[PASS] anchor forward",
+            anchor_embedding.shape,
+            flush=True,
+        )
+
+        print("TARGET FORWARD START", flush=True)
+
+        target_embedding = model.encode_image(target)
+
+        torch.cuda.synchronize()
+
+        print(
+            "[PASS] target forward",
+            target_embedding.shape,
+            flush=True,
+        )
+
+        print("DONE", flush=True)
+        """,
+    ):
+        return
+
+    # ======================================================
+    # E — LOSS
+    # ======================================================
+
+    if not run_phase(
+        "E — CONTRASTIVE LOSS",
+        """
+        import torch
+        from torch.utils.data import DataLoader
+
+        from retrieval.configs import DEVICE
+        from retrieval.training.training_dataset import PairTrainingDataset
+        from retrieval.modeling.retrieval_model import RetrievalModel
+        from retrieval.training.loss import build_loss
+
+        dataset = PairTrainingDataset(train=True)
+
+        loader = DataLoader(
+            dataset,
+            batch_size=2,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=False,
+        )
+
+        batch = next(iter(loader))
+
+        model = RetrievalModel().to(DEVICE)
+
+        model.train()
+
+        anchor = batch["anchor_image"].to(DEVICE)
+        target = batch["target_image"].to(DEVICE)
+        labels = batch["label"].to(DEVICE)
+
+        torch.cuda.synchronize()
+
+        print("Forward", flush=True)
+
+        anchor_embedding = model.encode_image(anchor)
+
+        target_embedding = model.encode_image(target)
+
+        torch.cuda.synchronize()
+
+        print("[PASS] forward", flush=True)
+
+        criterion = build_loss()
+
+        print("[PASS] loss created", flush=True)
+
+        print("LOSS FORWARD START", flush=True)
+
+        result = criterion(
+            pair_anchor=anchor_embedding,
+            pair_target=target_embedding,
+            pair_label=labels,
+        )
+
+        torch.cuda.synchronize()
+
+        print("[PASS] loss", flush=True)
+
+        print(
+            "loss =",
+            result["loss"].item(),
+            flush=True,
+        )
+
+        print("DONE", flush=True)
+        """,
+    ):
+        return
+
+    # ======================================================
+    # F — BACKWARD
+    # ======================================================
+
+    if not run_phase(
+        "F — BACKWARD",
+        """
+        import torch
+        from torch.utils.data import DataLoader
+
+        from retrieval.configs import DEVICE
+        from retrieval.training.training_dataset import PairTrainingDataset
+        from retrieval.modeling.retrieval_model import RetrievalModel
+        from retrieval.training.loss import build_loss
+
+        dataset = PairTrainingDataset(train=True)
+
+        loader = DataLoader(
+            dataset,
+            batch_size=2,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=False,
+        )
+
+        batch = next(iter(loader))
+
+        model = RetrievalModel().to(DEVICE)
+
+        model.train()
+
+        anchor = batch["anchor_image"].to(DEVICE)
+        target = batch["target_image"].to(DEVICE)
+        labels = batch["label"].to(DEVICE)
+
+        torch.cuda.synchronize()
+
+        anchor_embedding = model.encode_image(anchor)
+
+        target_embedding = model.encode_image(target)
+
+        criterion = build_loss()
+
+        result = criterion(
+            pair_anchor=anchor_embedding,
+            pair_target=target_embedding,
+            pair_label=labels,
+        )
+
+        loss = result["loss"]
+
+        torch.cuda.synchronize()
+
+        print(
+            "LOSS READY:",
+            loss.item(),
+            flush=True,
+        )
+
+        print("BACKWARD START", flush=True)
+
+        loss.backward()
+
+        torch.cuda.synchronize()
+
+        print("[PASS] backward", flush=True)
+
+        print("DONE", flush=True)
+        """,
+    ):
+        return
+
+    # ======================================================
+    # G — OPTIMIZER
+    # ======================================================
+
+    run_phase(
+        "G — OPTIMIZER STEP",
+        """
+        import torch
+        from torch.utils.data import DataLoader
+
+        from retrieval.configs import (
+            DEVICE,
+            LEARNING_RATE,
+            WEIGHT_DECAY,
+            BETAS,
+            EPS,
+        )
+
+        from retrieval.training.training_dataset import PairTrainingDataset
+        from retrieval.modeling.retrieval_model import RetrievalModel
+        from retrieval.training.loss import build_loss
+
+        dataset = PairTrainingDataset(train=True)
+
+        loader = DataLoader(
+            dataset,
+            batch_size=2,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=False,
+        )
+
+        batch = next(iter(loader))
+
+        model = RetrievalModel().to(DEVICE)
+
+        model.train()
+
+        criterion = build_loss()
+
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=LEARNING_RATE,
+            betas=BETAS,
+            eps=EPS,
+            weight_decay=WEIGHT_DECAY,
+        )
+
+        anchor = batch["anchor_image"].to(DEVICE)
+        target = batch["target_image"].to(DEVICE)
+        labels = batch["label"].to(DEVICE)
+
+        torch.cuda.synchronize()
+
+        anchor_embedding = model.encode_image(anchor)
+
+        target_embedding = model.encode_image(target)
+
+        result = criterion(
+            pair_anchor=anchor_embedding,
+            pair_target=target_embedding,
+            pair_label=labels,
+        )
+
+        loss = result["loss"]
+
+        torch.cuda.synchronize()
+
+        print(
+            "LOSS:",
+            loss.item(),
+            flush=True,
+        )
+
+        optimizer.zero_grad(set_to_none=True)
+
+        print("BACKWARD START", flush=True)
+
+        loss.backward()
+
+        torch.cuda.synchronize()
+
+        print("[PASS] backward", flush=True)
+
+        print("OPTIMIZER STEP START", flush=True)
+
+        optimizer.step()
+
+        torch.cuda.synchronize()
+
+        print("[PASS] optimizer.step()", flush=True)
+
+        print("DONE", flush=True)
+        """,
     )
 
-    print(
 
-        epoch,
-
-        score,
-
-        result,
-
-    )
-
-    if result["stop"]:
-
-        print()
-
-        print("Threshold Reached")
-
-        break
-
-print()
-print("=" * 80)
-print("EarlyStopping Test Finished")
-print("=" * 80)
+if __name__ == "__main__":
+    main()

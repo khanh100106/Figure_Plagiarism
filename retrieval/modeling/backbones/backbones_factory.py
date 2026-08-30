@@ -17,7 +17,7 @@ from retrieval.configs import (
     BACKBONE,
 )
 
-from retrieval.modeling.backbones.base import (
+from retrieval.modeling.backbones.backbones_base import (
     BaseBackbone,
 )
 

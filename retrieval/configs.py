@@ -196,6 +196,14 @@ DATASET_CHECKPOINT_FILE = (
 MAX_POSITIVES_PER_ANCHOR = 3
 MAX_NEGATIVES_PER_ANCHOR = 5
 # ============================================================
+# Pair Dataset
+# ============================================================
+
+PAIR_SHUFFLE = True
+
+PAIR_DROP_LAST = False
+
+# ============================================================
 # Mining statistic
 # ============================================================
 SIMILARITY_STATISTICS_FILE = (
@@ -294,27 +302,24 @@ ENABLE_RANDOM_ERASING = True
 ERASING_PROBABILITY = 0.5
 ERASING_SCALE = (0.02, 0.15)
 ERASING_RATIO = (0.3, 3.3)
-# ------------------------------------------------------------
-# Partial Occlusion (Paper2Fig custom augmentation)
-# ------------------------------------------------------------
-ENABLE_PARTIAL_OCCLUSION = True
-PARTIAL_OCCLUSION_PROBABILITY = 0.30
-PARTIAL_OCCLUSION_MIN = 0.10
-PARTIAL_OCCLUSION_MAX = 0.30
 
 # ============================================================
 # Training
 # ============================================================
 
-TRAINING_MODE = "hybrid"
+TRAINING_MODE = "pair"
+TRAIN_RATIO = 0.8
 
+VALID_RATIO = 0.2
+
+RANDOM_SPLIT_SEED = SEED
 # pair
 # triplet
 # hybrid
 # ============================================================
 # Loss
 # ============================================================
-LOSS_TYPE = "hybrid"
+LOSS_TYPE = "contrastive"
 # contrastive
 # triplet
 # hybrid
@@ -345,6 +350,18 @@ MIN_LEARNING_RATE = 1e-6
 # Experiments Directories
 # ============================================================
 EXPERIMENT_DIR = PROJECT_ROOT / "experiments"
+EXPERIMENT_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+BEST_MODEL_FILE = (
+    EXPERIMENT_DIR / "best_model.pt"
+)
+
+LAST_MODEL_FILE = (
+    EXPERIMENT_DIR / "last_model.pt"
+)
 # ============================================================
 # Resume
 # ============================================================
@@ -435,3 +452,50 @@ HEAD = "projection"
 PROJECTION_DIM = 512
 
 DROPOUT = 0.1
+
+# ============================================================
+# Image Normalization
+# ============================================================
+
+IMAGE_MEAN = (
+    0.485,
+    0.456,
+    0.406,
+)
+
+IMAGE_STD = (
+    0.229,
+    0.224,
+    0.225,
+)
+
+# ============================================================
+# Resize
+# ============================================================
+
+IMAGE_SIZE = 518
+
+# ------------------------------------------------------------
+# Partial Occlusion (Paper2Fig Custom Augmentation)
+# ------------------------------------------------------------
+
+ENABLE_PARTIAL_OCCLUSION = True
+
+PARTIAL_OCCLUSION_PROBABILITY = 0.30
+
+PARTIAL_OCCLUSION_MIN_WIDTH = 0.10
+PARTIAL_OCCLUSION_MAX_WIDTH = 0.30
+
+PARTIAL_OCCLUSION_MIN_HEIGHT = 0.10
+PARTIAL_OCCLUSION_MAX_HEIGHT = 0.30
+
+PARTIAL_OCCLUSION_FILL = "black"
+
+PARTIAL_OCCLUSION_MAX_REGIONS = 2
+
+# ------------------------------------------------------------
+# 01_extract_embeddings
+# ------------------------------------------------------------
+
+
+FREEZE_BACKBONE = False

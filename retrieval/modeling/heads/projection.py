@@ -16,7 +16,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 
-from retrieval.modeling.heads.base import BaseHead
+from retrieval.modeling.heads.heads_base import BaseHead
 
 
 class ProjectionHead(BaseHead):
