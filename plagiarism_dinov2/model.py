@@ -28,8 +28,6 @@ class ProjectionHead(nn.Module):
         super().__init__()
 
         self.net = nn.Sequential(
-            nn.Linear(input_dim, input_dim),
-            nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(input_dim, projection_dim),
         )
@@ -55,6 +53,7 @@ class TwinDinoV2Encoder(nn.Module):
         super().__init__()
 
         self.backbone_name = backbone_name
+        self.freeze_backbone = freeze_backbone
 
         self.backbone = torch.hub.load(
             repo_or_dir="facebookresearch/dinov2",
@@ -64,6 +63,7 @@ class TwinDinoV2Encoder(nn.Module):
         if freeze_backbone:
             for parameter in self.backbone.parameters():
                 parameter.requires_grad = False
+            self.backbone.eval()
 
         self.head = ProjectionHead(
             input_dim=self.backbone.embed_dim,
@@ -84,6 +84,17 @@ class TwinDinoV2Encoder(nn.Module):
         """
         features = self.backbone(images)
         return self.head(features)
+
+    def train(self, mode: bool = True) -> "TwinDinoV2Encoder":
+        """
+        Override de backbone dong bang luon o eval mode (khong
+        bat dropout/drop-path ben trong DINOv2) du model.train()
+        duoc goi trong vong lap training.
+        """
+        super().train(mode)
+        if self.freeze_backbone:
+            self.backbone.eval()
+        return self
 
     def forward(
         self,
@@ -178,6 +189,8 @@ class ImageTextDualEncoder(nn.Module):
 
         self.backbone_name = backbone_name
         self.text_model_name = text_model_name
+        self.freeze_backbone = freeze_backbone
+        self.freeze_text_encoder = freeze_text_encoder
 
         self.image_backbone = torch.hub.load(
             repo_or_dir="facebookresearch/dinov2",
@@ -187,11 +200,15 @@ class ImageTextDualEncoder(nn.Module):
         if freeze_backbone:
             for parameter in self.image_backbone.parameters():
                 parameter.requires_grad = False
+            self.image_backbone.eval()
 
         self.text_backbone = TextEncoder(
             model_name=text_model_name,
             freeze=freeze_text_encoder,
         )
+
+        if freeze_text_encoder:
+            self.text_backbone.eval()
 
         self.image_head = ProjectionHead(
             input_dim=self.image_backbone.embed_dim,
@@ -221,6 +238,19 @@ class ImageTextDualEncoder(nn.Module):
     ) -> torch.Tensor:
         features = self.text_backbone(input_ids, attention_mask)
         return self.text_head(features)
+
+    def train(self, mode: bool = True) -> "ImageTextDualEncoder":
+        """
+        Override de cac nhanh dong bang luon o eval mode (khong
+        bat dropout ben trong DINOv2/SciBERT) du model.train()
+        duoc goi trong vong lap training.
+        """
+        super().train(mode)
+        if self.freeze_backbone:
+            self.image_backbone.eval()
+        if self.freeze_text_encoder:
+            self.text_backbone.eval()
+        return self
 
     def forward(
         self,

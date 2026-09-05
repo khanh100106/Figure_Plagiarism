@@ -15,6 +15,7 @@ __pycache__/
 
 # Dataset
 paper2fig2026/*
+Figure Plagiarism corpus/*
 
 # Experiment
 experiments/*
