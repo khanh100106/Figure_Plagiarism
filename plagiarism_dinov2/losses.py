@@ -29,7 +29,7 @@ def contrastive_loss(
         device=figure_embeddings.device,
     )
 
-    loss_figure_to_caption = F.cross_entropy(logits_per_figure, targets, label_smoothing=0.1)
-    loss_caption_to_figure = F.cross_entropy(logits_per_caption, targets, label_smoothing=0.1)
+    loss_figure_to_caption = F.cross_entropy(logits_per_figure, targets)
+    loss_caption_to_figure = F.cross_entropy(logits_per_caption, targets)
 
     return (loss_figure_to_caption + loss_caption_to_figure) / 2.0

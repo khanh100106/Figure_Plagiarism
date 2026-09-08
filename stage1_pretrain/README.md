@@ -68,6 +68,9 @@ Kết quả mỗi experiment:
 - `best.pt`, `last.pt` — checkpoint.
 - `history.json` — loss/accuracy theo epoch.
 - `config_used.json` — snapshot tham số đã dùng.
+- `test_metrics.json` — đánh giá trên tập test (dùng `best.pt`, chạy 1 lần duy nhất sau khi train xong).
+
+Dữ liệu chia 3 phần theo `anchor_path` (`TRAIN_RATIO`/`VAL_RATIO`/`TEST_RATIO`, mặc định 70/15/15) — tránh trường hợp 2 bản synthetic của cùng 1 figure gốc bị chia vào 2 tập khác nhau.
 
 ### Bước 3: Dùng checkpoint ở Giai đoạn 2
 

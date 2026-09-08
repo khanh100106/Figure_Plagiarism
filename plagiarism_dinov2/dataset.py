@@ -73,13 +73,27 @@ def load_metadata(
 def split_by_paper(
     dataframe: pd.DataFrame,
     train_ratio: float,
+    val_ratio: float,
     seed: int,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Chia train/val theo paper_id (khong theo tung dong), de dam
-    bao cac figure/caption cua CUNG mot paper khong bi chia vao
-    ca hai tap -> tranh data leakage.
+    Chia train/val/test theo paper_id (khong theo tung dong), de
+    dam bao cac figure/caption cua CUNG mot paper khong bi chia
+    vao nhieu hon 1 tap -> tranh data leakage.
+
+    Tap test KHONG duoc dung trong suot qua trinh tuning (chon
+    tham so, so sanh cau hinh, early stopping...) - chi dung 1
+    lan duy nhat sau khi da chot cau hinh cuoi cung, de danh gia
+    khach quan (val da bi dung lien tuc de chon "best model" nen
+    khong con khach quan cho muc dich nay nua).
     """
+    if train_ratio + val_ratio >= 1.0:
+        raise ValueError(
+            f"train_ratio + val_ratio phai nho hon 1.0 de con lai "
+            f"phan cho tap test (hien tai: {train_ratio} + "
+            f"{val_ratio} = {train_ratio + val_ratio})"
+        )
+
     paper_ids = dataframe["paper_id"].unique().tolist()
 
     shuffled_papers = (
@@ -88,9 +102,13 @@ def split_by_paper(
         .tolist()
     )
 
-    cutoff = int(len(shuffled_papers) * train_ratio)
-    train_papers = set(shuffled_papers[:cutoff])
-    val_papers = set(shuffled_papers[cutoff:])
+    n_total = len(shuffled_papers)
+    n_train = int(n_total * train_ratio)
+    n_val = int(n_total * val_ratio)
+
+    train_papers = set(shuffled_papers[:n_train])
+    val_papers = set(shuffled_papers[n_train : n_train + n_val])
+    test_papers = set(shuffled_papers[n_train + n_val :])
 
     train_df = dataframe[
         dataframe["paper_id"].isin(train_papers)
@@ -100,14 +118,19 @@ def split_by_paper(
         dataframe["paper_id"].isin(val_papers)
     ].reset_index(drop=True)
 
-    if len(train_df) == 0 or len(val_df) == 0:
+    test_df = dataframe[
+        dataframe["paper_id"].isin(test_papers)
+    ].reset_index(drop=True)
+
+    if len(train_df) == 0 or len(val_df) == 0 or len(test_df) == 0:
         raise ValueError(
-            "Split train/val bi rong. Dataset qua nho hoac so "
-            "luong paper_id duy nhat qua it de chia theo paper. "
-            "Hay giam TRAIN_RATIO hoac kiem tra lai cot paper_id."
+            "Mot trong 3 tap train/val/test bi rong. Dataset qua "
+            "nho hoac so luong paper_id duy nhat qua it de chia "
+            "lam 3 phan. Hay dieu chinh TRAIN_RATIO/VAL_RATIO "
+            "trong config.py hoac kiem tra lai cot paper_id."
         )
 
-    return train_df, val_df
+    return train_df, val_df, test_df
 
 
 class FigureCaptionDataset(Dataset):

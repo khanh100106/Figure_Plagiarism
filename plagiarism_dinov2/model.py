@@ -28,6 +28,8 @@ class ProjectionHead(nn.Module):
         super().__init__()
 
         self.net = nn.Sequential(
+            nn.Linear(input_dim, input_dim),
+            nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(input_dim, projection_dim),
         )

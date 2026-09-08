@@ -5,16 +5,16 @@ Train
 Chay: python train.py
 
 Quy trinh:
-  - Doc CSV metadata, chia train/val theo paper_id.
+  - Doc CSV metadata, chia train/val/test theo paper_id.
   - Moi epoch: train (contrastive loss) -> validate (loss +
     recall@1/@5) -> in ra man hinh -> luu checkpoint.
-  - Sau khi train xong: luu bieu do loss/recall theo epoch.
+  - Sau khi train xong: luu bieu do loss/recall theo epoch, roi
+    danh gia 1 LAN DUY NHAT tren tap test bang best.pt.
 """
 from __future__ import annotations
 
 import json
 import time
-import math
 
 import torch
 from torch.amp import autocast, GradScaler
@@ -28,7 +28,11 @@ from model import TwinDinoV2Encoder, ImageTextDualEncoder
 from collate import TextCollator
 from losses import contrastive_loss
 from utils import seed_everything, recall_at_k, plot_training_curves
-from experiment import create_experiment_dir, save_config_snapshot
+from experiment import (
+    create_experiment_dir,
+    save_config_snapshot,
+    resolve_experiment_dir,
+)
 
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -185,9 +189,6 @@ def train_one_epoch(
             scaler.update()
             optimizer.zero_grad()
 
-            with torch.no_grad():
-                model.logit_scale.clamp_(0, math.log(100))
-
         batch_size = embeddings_a.size(0)
         running_loss += loss.item() * batch_size
         total += batch_size
@@ -233,9 +234,66 @@ def validate(model, loader, device, forward_fn, use_amp: bool) -> dict:
     return metrics
 
 
+def load_stage1_backbone(model, checkpoint_path) -> None:
+    """
+    Nap trong so DINOv2 da hoc o Stage 1 (stage1_pretrain/) vao
+    phan anh cua model Stage 2.
+    """
+    checkpoint = torch.load(checkpoint_path, map_location="cpu")
+    state_dict = checkpoint.get("model_state_dict", checkpoint)
+
+    backbone_state_dict = {
+        key[len("backbone."):]: value
+        for key, value in state_dict.items()
+        if key.startswith("backbone.")
+    }
+
+    if not backbone_state_dict:
+        raise ValueError(
+            f"Khong tim thay tham so 'backbone.*' trong checkpoint "
+            f"{checkpoint_path}. Kiem tra lai day co dung la "
+            f"checkpoint tu stage1_pretrain/train_stage1.py khong."
+        )
+
+    target_module = getattr(model, "image_backbone", None) or getattr(
+        model, "backbone", None,
+    )
+    if target_module is None:
+        raise AttributeError(
+            "Model khong co attribute 'image_backbone' hoac 'backbone' "
+            "- khong biet nap vao dau."
+        )
+
+    missing, unexpected = target_module.load_state_dict(
+        backbone_state_dict, strict=False,
+    )
+    print(f"Da nap backbone tu Stage 1: {checkpoint_path}")
+    print(f"  missing keys: {len(missing)} | unexpected keys: {len(unexpected)}")
+
+
+def _recover_early_stopping_state(
+    history: dict,
+    min_delta: float,
+) -> tuple[float, int]:
+    """
+    Khi resume, tinh lai best_recall1 va so epoch lien tiep khong
+    cai thien bang cach replay lai dung logic early-stopping tren
+    history da luu - dam bao hanh vi giong het nhu khong bi ngat.
+    """
+    best_recall1 = -1.0
+    epochs_without_improvement = 0
+
+    for recall1 in history.get("val_recall1", []):
+        if recall1 > best_recall1 + min_delta:
+            best_recall1 = recall1
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+
+    return best_recall1, epochs_without_improvement
+
+
 def main() -> None:
-    torch.backends.cudnn.benchmark = True
-    torch.set_float32_matmul_precision("high")
     seed_everything(config.SEED)
 
     device = torch.device(
@@ -244,17 +302,26 @@ def main() -> None:
     print(f"Su dung thiet bi: {device}")
 
     config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    experiment_dir = create_experiment_dir(config.OUTPUT_DIR)
-    save_config_snapshot(experiment_dir, config)
-    print(f"Experiment: {experiment_dir}")
+    experiment_dir, resuming = resolve_experiment_dir(
+        config.OUTPUT_DIR, config.RESUME_TRAINING,
+    )
+    if not resuming:
+        save_config_snapshot(experiment_dir, config)
+    print(f"Experiment: {experiment_dir} (resume={resuming})")
+
+    log_path = experiment_dir / "train_log.txt"
 
     dataframe = load_metadata(config.DATA_CSV, modality=config.CAPTION_MODALITY)
-    train_df, val_df = split_by_paper(
+    train_df, val_df, test_df = split_by_paper(
         dataframe,
         config.TRAIN_RATIO,
+        config.VAL_RATIO,
         config.SEED,
     )
-    print(f"So dong train: {len(train_df)} | So dong val: {len(val_df)}")
+    print(
+        f"So dong train: {len(train_df)} | So dong val: {len(val_df)} | "
+        f"So dong test: {len(test_df)}"
+    )
 
     train_transform, eval_transform = build_transforms()
 
@@ -263,12 +330,21 @@ def main() -> None:
         config.IMAGE_ROOT,
         train_transform,
         modality=config.CAPTION_MODALITY,
+        augment_text=True,
     )
     val_dataset = FigureCaptionDataset(
         val_df,
         config.IMAGE_ROOT,
         eval_transform,
         modality=config.CAPTION_MODALITY,
+        augment_text=False,
+    )
+    test_dataset = FigureCaptionDataset(
+        test_df,
+        config.IMAGE_ROOT,
+        eval_transform,
+        modality=config.CAPTION_MODALITY,
+        augment_text=False,
     )
 
     if config.CAPTION_MODALITY == "text":
@@ -296,6 +372,10 @@ def main() -> None:
         ).to(device)
 
     print(model)
+
+    if config.STAGE1_CHECKPOINT is not None:
+        load_stage1_backbone(model, config.STAGE1_CHECKPOINT)
+
     forward_fn = build_forward_fn(config.CAPTION_MODALITY)
 
     train_loader = DataLoader(
@@ -306,7 +386,6 @@ def main() -> None:
         drop_last=True,
         pin_memory=True,
         collate_fn=collate_fn,
-        persistent_workers=(config.NUM_WORKERS > 0),
     )
     val_loader = DataLoader(
         val_dataset,
@@ -315,7 +394,14 @@ def main() -> None:
         num_workers=config.NUM_WORKERS,
         pin_memory=True,
         collate_fn=collate_fn,
-        persistent_workers=(config.NUM_WORKERS > 0),
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=config.BATCH_SIZE,
+        shuffle=False,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=True,
+        collate_fn=collate_fn,
     )
 
     param_groups = build_param_groups(
@@ -341,6 +427,7 @@ def main() -> None:
         f"Grad accumulation steps: {config.GRAD_ACCUM_STEPS}"
     )
 
+    start_epoch = 1
     history = {
         "train_loss": [],
         "val_loss": [],
@@ -348,11 +435,50 @@ def main() -> None:
         "val_recall5": [],
     }
 
-    best_recall1 = -1.0
-    best_val_loss = float("inf")
-    epochs_without_improvement = 0
+    if resuming:
+        checkpoint = torch.load(
+            experiment_dir / "last.pt", map_location=device,
+        )
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        scaler.load_state_dict(checkpoint["scaler_state_dict"])
+        start_epoch = checkpoint["epoch"] + 1
 
-    for epoch in range(1, config.NUM_EPOCHS + 1):
+        history_path = experiment_dir / "history.json"
+        if history_path.exists():
+            with open(history_path, "r", encoding="utf-8") as file:
+                history = json.load(file)
+
+        # Cosine scheduler chi la ham dong cua so epoch da qua, nen
+        # tao lai voi last_epoch dung se cho ra dung LR tai diem
+        # dang do dang, khong can luu rieng state cua scheduler.
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=config.NUM_EPOCHS,
+            last_epoch=start_epoch - 2,
+        )
+
+        print(
+            f"Resume tu epoch {start_epoch} (checkpoint epoch "
+            f"{checkpoint['epoch']})"
+        )
+
+        with open(log_path, "a", encoding="utf-8") as file:
+            file.write(f"\n--- RESUME tu epoch {start_epoch} ---\n")
+
+    def _log(message: str) -> None:
+        """In ra console VA ghi vao file log - de xem lai duoc du
+        console co bi cuon mat hay chay khong tuong tac (chay
+        400 epoch qua dem, khong ngoi xem lien tuc)."""
+        print(message)
+        with open(log_path, "a", encoding="utf-8") as file:
+            file.write(message + "\n")
+
+    best_recall1, epochs_without_improvement = _recover_early_stopping_state(
+        history, config.EARLY_STOPPING_MIN_DELTA,
+    )
+
+    for epoch in range(start_epoch, config.NUM_EPOCHS + 1):
         start_time = time.time()
 
         train_loss = train_one_epoch(
@@ -377,7 +503,7 @@ def main() -> None:
 
         current_lr = optimizer.param_groups[0]["lr"]
 
-        print(
+        _log(
             f"Epoch {epoch:03d}/{config.NUM_EPOCHS} | "
             f"train_loss={train_loss:.4f} | "
             f"val_loss={val_metrics['loss']:.4f} | "
@@ -386,6 +512,11 @@ def main() -> None:
             f"lr={current_lr:.2e} | "
             f"time={elapsed:.1f}s"
         )
+
+        # Ghi history NGAY sau moi epoch (khong doi den cuoi) - neu
+        # bi ngat ngang van con day du de xem lai/resume/ve bieu do.
+        with open(experiment_dir / "history.json", "w", encoding="utf-8") as file:
+            json.dump(history, file, indent=2)
 
         checkpoint = {
             "epoch": epoch,
@@ -400,25 +531,47 @@ def main() -> None:
             best_recall1 = val_metrics["recall@1"]
             epochs_without_improvement = 0
             torch.save(checkpoint, experiment_dir / "best.pt")
-            print(f"  -> Luu model tot nhat theo recall@1 (recall@1={best_recall1:.4f})")
+            _log(f"  -> Luu model tot nhat (recall@1={best_recall1:.4f})")
         else:
             epochs_without_improvement += 1
 
-        if val_metrics["loss"] < best_val_loss:
-            best_val_loss = val_metrics["loss"]
-            torch.save(checkpoint, experiment_dir / "best_val_loss.pt")
-            print(f"  -> Luu model tot nhat theo val_loss (val_loss={best_val_loss:.4f})")
-
         if epochs_without_improvement >= config.EARLY_STOPPING_PATIENCE:
-            print(f"Dung som (early stopping) tai epoch {epoch}.")
+            _log(f"Dung som (early stopping) tai epoch {epoch}.")
             break
-
-    with open(experiment_dir / "history.json", "w", encoding="utf-8") as file:
-        json.dump(history, file, indent=2)
 
     plot_path = experiment_dir / "training_curves.png"
     plot_training_curves(history, plot_path)
     print(f"Da luu bieu do train/val vao: {plot_path}")
+
+    # --------------------------------------------------------
+    # Danh gia tren tap TEST - chi chay 1 LAN DUY NHAT sau khi da
+    # chot model (dung best.pt theo val), khong dung tap test cho
+    # bat ky quyet dinh nao trong qua trinh train o tren.
+    # --------------------------------------------------------
+    best_checkpoint_path = experiment_dir / "best.pt"
+    if best_checkpoint_path.exists():
+        best_checkpoint = torch.load(best_checkpoint_path, map_location=device)
+        model.load_state_dict(best_checkpoint["model_state_dict"])
+
+        test_metrics = validate(model, test_loader, device, forward_fn, use_amp)
+
+        print(
+            f"\n[TEST - chi danh gia 1 lan, dung best.pt] "
+            f"loss={test_metrics['loss']:.4f} | "
+            f"recall@1={test_metrics['recall@1']:.4f} | "
+            f"recall@5={test_metrics['recall@5']:.4f}"
+        )
+
+        with open(
+            experiment_dir / "test_metrics.json", "w", encoding="utf-8"
+        ) as file:
+            json.dump(test_metrics, file, indent=2)
+    else:
+        print(
+            "[Canh bao] Khong tim thay best.pt - bo qua danh gia tap test "
+            "(co the training bi dung truoc epoch dau tien hoan tat)."
+        )
+
     print(f"Toan bo ket qua experiment nay nam trong: {experiment_dir}")
 
 

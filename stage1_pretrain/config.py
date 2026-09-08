@@ -18,7 +18,7 @@ from pathlib import Path
 # Nguon 1: Corpus dao hinh that (flowchart)
 # ----------------------------------------------------------------
 # Sua duong dan nay tro toi thu muc goc "Figure Plagiarism corpus".
-FLOWCHART_ROOT = Path("data/figure_plagiarism_corpus")
+FLOWCHART_ROOT = Path("D:/Research/PhD/Plagiarism/train/figure_plagiarism_corpus")
 
 # Ten cac thu muc con - SUA LAI neu ten thuc te cua ban khac (vd
 # viet hoa/thuong, dau cach khac).
@@ -42,17 +42,21 @@ FLOWCHART_GROUPS = [
     {
         "name": "textual_reference",
         "root": "Textual reference based figure plagiarism",
-        "annotations": "Annotations",
+        # XML nhom nay (feature name="Real plagiarism") KHONG co
+        # source_reference - khong the lien ket chinh xac tung cap
+        # tu XML. Ghep theo so thu tu trong ten file thay the
+        # (suspicious 00.pdf <-> source 00.pdf), giong nhom Hybrid.
+        "annotations": None,
         "plagiarised": "plagiarised figures",
         "source": "Source figures",
-        "has_xml": True,
+        "has_xml": False,
     },
 ]
 
 # ----------------------------------------------------------------
 # Nguon 2: paper2fig2026 (de sinh cap synthetic)
 # ----------------------------------------------------------------
-PAPER2FIG_ROOT = Path("data/paper2fig2026")
+PAPER2FIG_ROOT = Path("D:/Research/PhD/Plagiarism/train/paper2fig2026")
 PAPER2FIG_METADATA = PAPER2FIG_ROOT / "metadata" / "paper2fig2026_metadata.csv"
 CATEGORIES = ["AI", "BIOINFO", "CV", "IMAGING", "ML", "ROBOTICS", "SIGNAL"]
 
@@ -105,10 +109,19 @@ WEIGHT_DECAY = 1e-2
 # khoang cach(anchor,positive) it nhat TRIPLET_MARGIN.
 TRIPLET_MARGIN = 0.2
 
-TRAIN_RATIO = 0.9
+# Ty le du lieu train/val/test, chia theo anchor_path.
+# Tap test khong dung trong qua trinh tuning, chi de danh gia cuoi.
+TRAIN_RATIO = 0.70
+VAL_RATIO = 0.15
+TEST_RATIO = 0.15  # = 1 - TRAIN_RATIO - VAL_RATIO
 SEED = 42
 DEVICE = "cuda"
 NUM_WORKERS = 4
 
 EARLY_STOPPING_PATIENCE = 5
 EARLY_STOPPING_MIN_DELTA = 0.0005
+
+# True: neu experiment gan nhat trong OUTPUT_DIR co checkpoint
+# "last.pt", tiep tuc train tu do (dung khi bi ngat ngang - mat
+# dien, crash, dong may...). False: luon tao experiment moi.
+RESUME_TRAINING = False

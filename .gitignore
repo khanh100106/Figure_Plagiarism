@@ -15,7 +15,8 @@ __pycache__/
 
 # Dataset
 paper2fig2026/*
-Figure Plagiarism corpus/*
+figure_plagiarism_corpus/*
+stage1_pretrain/stage1_outputs/*
 
 # Experiment
 experiments/*
@@ -23,5 +24,5 @@ experiments/*
 !paper2fig2026/metadata/*
 
 paper2fig2026/analysis/embeddings/embeddings.npy
- paper2fig2026/analysis/faiss/index.faiss
+paper2fig2026/analysis/faiss/index.faiss
 

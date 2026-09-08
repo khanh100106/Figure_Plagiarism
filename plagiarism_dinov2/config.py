@@ -17,7 +17,10 @@ from pathlib import Path
 # caption_x1, caption_y1, caption_x2, caption_y2
 DATA_CSV = Path("D:/Research/PhD/Plagiarism/train/paper2fig2026/metadata/paper2fig2026_metadata.csv")
 
-IMAGE_ROOT = Path("D:/Research/PhD/Plagiarism/train/paper2fig2026")
+# Thu muc goc de noi voi figure_image_path / caption_image_path
+# neu cac duong dan trong CSV la duong dan tuong doi.
+# Neu CSV da luu duong dan tuyet doi thi cu de "" (chuoi rong).
+IMAGE_ROOT = Path("data")
 
 # Noi luu checkpoint, log, bieu do
 OUTPUT_DIR = Path("outputs")
@@ -40,7 +43,7 @@ CAPTION_MODALITY = "text"
 TEXT_MODEL_NAME = "allenai/scibert_scivocab_uncased"
 
 # So token toi da cho 1 caption (cat bot neu dai hon).
-MAX_TEXT_LENGTH = 64
+MAX_TEXT_LENGTH = 128
 
 # True: chi train text projection head, dong bang text encoder.
 # -> Dat True truoc (mac dinh): batch nho (16-64) khong du negative
@@ -54,13 +57,25 @@ FREEZE_TEXT_ENCODER = True
 # Cac lua chon: dinov2_vits14 | dinov2_vitb14 | dinov2_vitl14 | dinov2_vitg14
 BACKBONE_NAME = "dinov2_vitb14"
 
+# Neu da chay stage1_pretrain/train_stage1.py va co checkpoint,
+# dan duong dan "best.pt" vao day de khoi tao DINOv2 tu trong so
+# da hoc dac trung dao hinh (thay vi trong so pretrain goc tren
+# ImageNet-tu-giam-sat). None = khong nap, dung DINOv2 goc.
+STAGE1_CHECKPOINT = None
+
+# True: neu experiment gan nhat trong OUTPUT_DIR co checkpoint
+# "last.pt", tiep tuc train tu do (dung khi bi ngat ngang -
+# mat dien, crash, dong may...). False: luon tao experiment moi,
+# train tu dau.
+RESUME_TRAINING = False
+
 # True: chi train projection head, dong bang DINOv2 (nhanh, it VRAM,
 #       phu hop khi dataset nho HOAC GPU it VRAM nhu 8GB).
 # False: fine-tune ca DINOv2 (can nhieu du lieu + VRAM hon rat nhieu -
 #        voi GPU 8GB va IMAGE_SIZE lon se bi OOM).
 # -> Dat True truoc de chay on dinh, sau khi on roi neu du VRAM/du
 #    lieu, co the thu dat False de fine-tune sau cho chat luong tot hon.
-FREEZE_BACKBONE = False
+FREEZE_BACKBONE = True
 
 # DINOv2 dung patch 14x14 nen IMAGE_SIZE phai la boi so cua 14.
 # 518 la kich thuoc "chuan" cua DINOv2 nhung rat nang (attention
@@ -75,7 +90,7 @@ PROJECTION_DIM = 256
 
 # Tang dropout de chong overfit (train_loss ve gan 0 trong khi
 # val_loss tang la dau hieu can dropout/regularization manh hon).
-DROPOUT = 0.4
+DROPOUT = 0.3
 
 # ----------------------------------------------------------------
 # Training
@@ -93,12 +108,12 @@ GRAD_ACCUM_STEPS = 1
 # gan nhu khong doi chat luong. Tu dong tat neu chay CPU.
 USE_AMP = True
 
-NUM_EPOCHS = 60
-LEARNING_RATE = 1e-5
+NUM_EPOCHS = 30
+LEARNING_RATE = 1e-4
 
 # Tang weight decay de chong overfit khi model hoc rat nhanh
 # (train_loss ve gan 0 chi sau vai chuc epoch).
-WEIGHT_DECAY = 0.1
+WEIGHT_DECAY = 1e-2
 
 # LR danh cho backbone/text-encoder KHI ban dat FREEZE_BACKBONE
 # hoac FREEZE_TEXT_ENCODER = False (fine-tune). LR thuc te se la
@@ -106,12 +121,20 @@ WEIGHT_DECAY = 0.1
 # pretrain (can LR nho de khong pha vo feature da hoc), con
 # projection head (khoi tao ngau nhien) van dung LEARNING_RATE
 # day du. Khong co tac dung gi neu ca 2 dang bi dong bang.
-BACKBONE_LR_MULTIPLIER = 0.02
+BACKBONE_LR_MULTIPLIER = 0.1
 
 # Ty le du lieu dung de train (phan con lai dung de validate).
 # Split theo paper_id de tranh leakage (cung 1 paper khong bi
 # chia vao ca train lan val).
-TRAIN_RATIO = 0.85
+# Ty le du lieu dung de train/validate/test, chia theo paper_id
+# (khong theo tung dong) de tranh data leakage.
+#
+# Tap test KHONG duoc dung trong suot qua trinh tuning (chon
+# tham so, so sanh cau hinh, early stopping) - chi dung 1 lan sau
+# khi da chot cau hinh cuoi cung, de danh gia khach quan.
+TRAIN_RATIO = 0.70
+VAL_RATIO = 0.15
+TEST_RATIO = 0.15  # = 1 - TRAIN_RATIO - VAL_RATIO
 
 NUM_WORKERS = 4
 SEED = 42
@@ -121,11 +144,11 @@ DEVICE = "cuda"
 
 # Dung training som neu recall@1 tren val khong cai thien sau
 # tung nay epoch lien tiep.
-EARLY_STOPPING_PATIENCE = 6
+EARLY_STOPPING_PATIENCE = 7
 
 # Recall@1 phai tang toi thieu tung nay thi moi tinh la "cai
 # thien that" (reset patience). Neu khong co nguong nay, cac dao
 # dong nhieu (vd 0.0221 -> 0.0229 -> 0.0206) se lien tuc lam
 # early stopping tuong nham la van dang cai thien, khong bao gio
 # dung som duoc.
-EARLY_STOPPING_MIN_DELTA = 0.0005
+EARLY_STOPPING_MIN_DELTA = 0.002

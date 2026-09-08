@@ -60,10 +60,17 @@ Mỗi epoch sẽ in ra:
 Epoch 003/30 | train_loss=1.8421 | val_loss=1.7203 | recall@1=0.412 | recall@5=0.731 | lr=9.51e-05 | time=42.3s
 ```
 
-Kết thúc training sẽ có trong `outputs/`:
-- `best.pt`, `last.pt` — checkpoint (model + optimizer + epoch + metrics).
+Kết thúc training sẽ có trong `outputs/exp_XXXX/` (mỗi lần chạy
+`train.py` tự tạo 1 thư mục `exp_0001`, `exp_0002`, ... mới, không
+ghi đè lên kết quả lần chạy trước):
+- `config_used.json` — snapshot toàn bộ tham số đã dùng cho lần
+  chạy này (để sau còn biết `exp_0003` khác `exp_0001` ở chỗ nào).
+- `best.pt`, `last.pt` — checkpoint (model + optimizer + scaler + epoch + metrics).
 - `history.json` — toàn bộ loss/recall theo từng epoch.
 - `training_curves.png` — biểu đồ Train/Val Loss và Recall@1/@5 theo epoch.
+- `test_metrics.json` — kết quả đánh giá trên tập test (dùng `best.pt`, chỉ chạy **1 lần duy nhất** sau khi train xong, không dùng tập test cho bất kỳ quyết định nào trong lúc tuning).
+
+Dữ liệu được chia 3 phần theo `paper_id` (`TRAIN_RATIO`/`VAL_RATIO`/`TEST_RATIO` trong `config.py`, mặc định 70/15/15): tập val dùng để chọn "best model" và early stopping trong suốt quá trình train — vì bị dùng lặp đi lặp lại nên không còn khách quan để đánh giá cuối; tập test tách riêng, không đụng tới cho tới bước cuối cùng.
 
 ## Đổi backbone / text encoder / tham số
 
@@ -81,12 +88,52 @@ Tất cả nằm trong `config.py`, không cần sửa code:
 
 ## Lưu ý phần cứng
 
-- `IMAGE_SIZE` (mặc định 518) phải là bội số của 14 (patch size
-  của DINOv2). Muốn giảm VRAM có thể hạ xuống 224 hoặc 252 (vẫn
-  chia hết cho 14).
-- Batch size lớn hơn thường giúp contrastive loss tốt hơn (nhiều
-  negative hơn trong 1 batch) — nếu thiếu VRAM, ưu tiên giảm
-  `IMAGE_SIZE` trước khi giảm `BATCH_SIZE`.
-- Chế độ `"text"` tải thêm 1 model ngôn ngữ (SciBERT mặc định
-  ~440MB) — cần thêm VRAM/RAM so với chế độ `"image"` thuần.
+- `IMAGE_SIZE` (mặc định **224**) phải là bội số của 14 (patch size
+  của DINOv2). 518 là kích thước "chuẩn" của DINOv2 nhưng rất nặng
+  (attention tăng bình phương theo số patch) — chỉ nên dùng nếu
+  GPU ≥16GB và đã `FREEZE_BACKBONE=True`.
+- `FREEZE_BACKBONE = True` (mặc định): chỉ train projection head,
+  đóng băng DINOv2 — giảm VRAM rất nhiều. Sau khi train ổn định,
+  nếu đủ VRAM/dữ liệu, có thể thử `False` để fine-tune toàn bộ
+  cho chất lượng tốt hơn (nhưng cần GPU mạnh hơn nhiều).
+- `USE_AMP = True` (mixed precision, fp16): giảm ~40-50% VRAM,
+  gần như không đổi chất lượng. Chỉ có tác dụng trên GPU.
+- `GRAD_ACCUM_STEPS`: cộng dồn gradient qua nhiều batch nhỏ trước
+  khi update trọng số, effective batch = `BATCH_SIZE * GRAD_ACCUM_STEPS`.
+  Giúp gradient ổn định hơn khi buộc phải giảm `BATCH_SIZE` vì
+  thiếu VRAM — **nhưng lưu ý:** với contrastive loss, negative vẫn
+  chỉ lấy trong từng batch vật lý (`BATCH_SIZE`), không phải
+  effective batch, nên đây không thay thế hoàn toàn cho việc tăng
+  `BATCH_SIZE` thật nếu bạn có đủ VRAM.
+
+### Nếu vẫn gặp lỗi `CUDA out of memory`
+
+Giảm dần theo thứ tự ưu tiên (ít ảnh hưởng chất lượng nhất trước):
+1. Giảm `IMAGE_SIZE` (224 → 168 hoặc 112, vẫn phải chia hết 14).
+2. Giảm `BATCH_SIZE` (16 → 8 → 4), tăng `GRAD_ACCUM_STEPS` tương ứng
+   để giữ effective batch không đổi.
+3. Đổi `BACKBONE_NAME` sang `dinov2_vits14` (nhỏ hơn nhiều so với
+   `vitb14`).
+4. Đặt `FREEZE_TEXT_ENCODER = True` nếu đang dùng chế độ `"text"`.
+
+## Nếu bị overfitting (train_loss về gần 0, val_loss tăng dần)
+
+Dấu hiệu: `train_loss` giảm liên tục xuống rất thấp (< 0.1) trong
+khi `val_loss` tăng lên và `recall@1`/`recall@5` không cải thiện
+hoặc rất thấp. Thử theo thứ tự:
+
+1. Đảm bảo `FREEZE_BACKBONE = True` và `FREEZE_TEXT_ENCODER = True`
+   (mặc định hiện tại) — chỉ train 2 projection head trước, đây là
+   baseline ổn định nhất.
+2. Tăng `BATCH_SIZE` nếu còn dư VRAM (nhiều negative hơn giúp
+   contrastive loss tổng quát hoá tốt hơn, không chỉ nhanh hơn).
+3. Tăng `DROPOUT` (0.3 → 0.5) và/hoặc `WEIGHT_DECAY` (1e-2 → 5e-2).
+4. Kiểm tra `caption_text` có bị trùng lặp nhiều giữa các dòng
+   không (ví dụ nhiều figure dùng chung 1 caption mẫu) — nếu có,
+   model dễ "học vẹt" theo caption thay vì học liên hệ thật.
+5. Chỉ khi baseline (bước 1) đã ổn và còn dư VRAM/dữ liệu, mới thử
+   `FREEZE_TEXT_ENCODER = False` (hoặc `FREEZE_BACKBONE = False`)
+   để fine-tune sâu hơn — lúc này `BACKBONE_LR_MULTIPLIER` sẽ tự
+   động cho phần encoder LR nhỏ hơn projection head, tránh phá vỡ
+   feature đã pretrain.
 

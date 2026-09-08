@@ -21,9 +21,13 @@ from torchvision import transforms
 from tqdm import tqdm
 
 import config
-from dataset import load_pairs_csv, split_train_val, TripletPlagiarismDataset
+from dataset import load_pairs_csv, split_by_anchor, TripletPlagiarismDataset
 from model import PlagiarismEncoder
-from experiment import create_experiment_dir, save_config_snapshot
+from experiment import (
+    create_experiment_dir,
+    save_config_snapshot,
+    resolve_experiment_dir,
+)
 
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -135,6 +139,28 @@ def validate(model, loader, device, use_amp: bool) -> dict:
     }
 
 
+def _recover_early_stopping_state(
+    history: dict,
+    min_delta: float,
+) -> tuple[float, int]:
+    """
+    Khi resume, tinh lai best_accuracy va so epoch lien tiep khong
+    cai thien bang cach replay lai dung logic early-stopping tren
+    history da luu.
+    """
+    best_accuracy = -1.0
+    epochs_without_improvement = 0
+
+    for accuracy in history.get("val_accuracy", []):
+        if accuracy > best_accuracy + min_delta:
+            best_accuracy = accuracy
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+
+    return best_accuracy, epochs_without_improvement
+
+
 def main() -> None:
     torch.backends.cudnn.benchmark = True
     torch.manual_seed(config.SEED)
@@ -145,13 +171,23 @@ def main() -> None:
     print(f"Su dung thiet bi: {device}")
 
     config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    experiment_dir = create_experiment_dir(config.OUTPUT_DIR)
-    save_config_snapshot(experiment_dir, config)
-    print(f"Experiment: {experiment_dir}")
+    experiment_dir, resuming = resolve_experiment_dir(
+        config.OUTPUT_DIR, config.RESUME_TRAINING,
+    )
+    if not resuming:
+        save_config_snapshot(experiment_dir, config)
+    print(f"Experiment: {experiment_dir} (resume={resuming})")
+
+    log_path = experiment_dir / "train_log.txt"
 
     dataframe = load_pairs_csv(config.PAIRS_FILE)
-    train_df, val_df = split_train_val(dataframe, config.TRAIN_RATIO, config.SEED)
-    print(f"So dong train: {len(train_df)} | So dong val: {len(val_df)}")
+    train_df, val_df, test_df = split_by_anchor(
+        dataframe, config.TRAIN_RATIO, config.VAL_RATIO, config.SEED
+    )
+    print(
+        f"So dong train: {len(train_df)} | So dong val: {len(val_df)} | "
+        f"So dong test: {len(test_df)}"
+    )
     print(
         f"  Ty le real/synthetic (train): "
         f"{(train_df['pair_type'] == 'real').mean():.2%} / "
@@ -162,6 +198,7 @@ def main() -> None:
 
     train_dataset = TripletPlagiarismDataset(train_df, train_transform)
     val_dataset = TripletPlagiarismDataset(val_df, eval_transform)
+    test_dataset = TripletPlagiarismDataset(test_df, eval_transform)
 
     train_loader = DataLoader(
         train_dataset,
@@ -174,6 +211,14 @@ def main() -> None:
     )
     val_loader = DataLoader(
         val_dataset,
+        batch_size=config.BATCH_SIZE,
+        shuffle=False,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=True,
+        persistent_workers=(config.NUM_WORKERS > 0),
+    )
+    test_loader = DataLoader(
+        test_dataset,
         batch_size=config.BATCH_SIZE,
         shuffle=False,
         num_workers=config.NUM_WORKERS,
@@ -201,6 +246,7 @@ def main() -> None:
     use_amp = config.USE_AMP and device.type == "cuda"
     scaler = GradScaler(enabled=use_amp)
 
+    start_epoch = 1
     history = {
         "train_loss": [],
         "val_loss": [],
@@ -209,10 +255,46 @@ def main() -> None:
         "val_negative_distance": [],
     }
 
-    best_accuracy = -1.0
-    epochs_without_improvement = 0
+    if resuming:
+        checkpoint = torch.load(
+            experiment_dir / "last.pt", map_location=device,
+        )
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        scaler.load_state_dict(checkpoint["scaler_state_dict"])
+        start_epoch = checkpoint["epoch"] + 1
 
-    for epoch in range(1, config.NUM_EPOCHS + 1):
+        history_path = experiment_dir / "history.json"
+        if history_path.exists():
+            with open(history_path, "r", encoding="utf-8") as file:
+                history = json.load(file)
+
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=config.NUM_EPOCHS,
+            last_epoch=start_epoch - 2,
+        )
+
+        print(
+            f"Resume tu epoch {start_epoch} (checkpoint epoch "
+            f"{checkpoint['epoch']})"
+        )
+
+        with open(log_path, "a", encoding="utf-8") as file:
+            file.write(f"\n--- RESUME tu epoch {start_epoch} ---\n")
+
+    def _log(message: str) -> None:
+        """In ra console VA ghi vao file log - de xem lai duoc du
+        console co bi cuon mat hay chay khong tuong tac."""
+        print(message)
+        with open(log_path, "a", encoding="utf-8") as file:
+            file.write(message + "\n")
+
+    best_accuracy, epochs_without_improvement = _recover_early_stopping_state(
+        history, config.EARLY_STOPPING_MIN_DELTA,
+    )
+
+    for epoch in range(start_epoch, config.NUM_EPOCHS + 1):
         start_time = time.time()
 
         train_loss = train_one_epoch(
@@ -231,7 +313,7 @@ def main() -> None:
 
         current_lr = optimizer.param_groups[0]["lr"]
 
-        print(
+        _log(
             f"Epoch {epoch:03d}/{config.NUM_EPOCHS} | "
             f"train_loss={train_loss:.4f} | "
             f"val_loss={val_metrics['loss']:.4f} | "
@@ -242,9 +324,16 @@ def main() -> None:
             f"time={elapsed:.1f}s"
         )
 
+        # Ghi history NGAY sau moi epoch - neu bi ngat ngang van con
+        # day du de xem lai/resume/ve bieu do.
+        with open(experiment_dir / "history.json", "w", encoding="utf-8") as file:
+            json.dump(history, file, indent=2)
+
         checkpoint = {
             "epoch": epoch,
             "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "scaler_state_dict": scaler.state_dict(),
             "backbone_name": config.BACKBONE_NAME,
             "val_metrics": val_metrics,
         }
@@ -254,16 +343,41 @@ def main() -> None:
             best_accuracy = val_metrics["accuracy"]
             epochs_without_improvement = 0
             torch.save(checkpoint, experiment_dir / "best.pt")
-            print(f"  -> Luu model tot nhat (val_acc={best_accuracy:.4f})")
+            _log(f"  -> Luu model tot nhat (val_acc={best_accuracy:.4f})")
         else:
             epochs_without_improvement += 1
 
         if epochs_without_improvement >= config.EARLY_STOPPING_PATIENCE:
-            print(f"Dung som (early stopping) tai epoch {epoch}.")
+            _log(f"Dung som (early stopping) tai epoch {epoch}.")
             break
 
-    with open(experiment_dir / "history.json", "w", encoding="utf-8") as file:
-        json.dump(history, file, indent=2)
+    # --------------------------------------------------------
+    # Danh gia tren tap TEST - chi 1 LAN DUY NHAT, dung best.pt,
+    # khong dung tap test cho bat ky quyet dinh nao trong luc train.
+    # --------------------------------------------------------
+    best_checkpoint_path = experiment_dir / "best.pt"
+    if best_checkpoint_path.exists():
+        best_checkpoint = torch.load(best_checkpoint_path, map_location=device)
+        model.load_state_dict(best_checkpoint["model_state_dict"])
+
+        test_metrics = validate(model, test_loader, device, use_amp)
+
+        print(
+            f"\n[TEST - chi danh gia 1 lan, dung best.pt] "
+            f"loss={test_metrics['loss']:.4f} | "
+            f"accuracy={test_metrics['accuracy']:.4f} | "
+            f"pos_dist={test_metrics['positive_distance']:.4f} | "
+            f"neg_dist={test_metrics['negative_distance']:.4f}"
+        )
+
+        with open(
+            experiment_dir / "test_metrics.json", "w", encoding="utf-8"
+        ) as file:
+            json.dump(test_metrics, file, indent=2)
+    else:
+        print(
+            "[Canh bao] Khong tim thay best.pt - bo qua danh gia tap test."
+        )
 
     print(f"Toan bo ket qua experiment nay nam trong: {experiment_dir}")
     print(

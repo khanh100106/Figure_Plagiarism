@@ -28,6 +28,50 @@ def _existing_experiment_indices(base_dir: Path) -> list[int]:
 
     return indices
 
+def list_experiment_dirs(base_dir: Path) -> list[Path]:
+    """
+    Liet ke cac thu muc exp_XXXX, sap xep tang dan theo so thu tu.
+    """
+    base_dir = Path(base_dir)
+    if not base_dir.exists():
+        return []
+
+    dirs = [
+        path
+        for path in base_dir.iterdir()
+        if path.is_dir() and path.name.startswith("exp_")
+    ]
+
+    def _index(path: Path) -> int:
+        try:
+            return int(path.name.split("_")[1])
+        except (IndexError, ValueError):
+            return -1
+
+    dirs.sort(key=_index)
+    return dirs
+
+
+def resolve_experiment_dir(
+    base_dir: Path,
+    resume: bool,
+) -> tuple[Path, bool]:
+    """
+    Neu resume=True va co experiment gan nhat kem checkpoint
+    "last.pt", dung lai experiment do (tiep tuc train). Nguoc
+    lai (resume=False, hoac chua co experiment nao, hoac experiment
+    gan nhat chua co checkpoint), tao experiment moi.
+
+    Tra ve (experiment_dir, dang_resume: bool).
+    """
+    if resume:
+        existing = list_experiment_dirs(base_dir)
+        if existing:
+            last_dir = existing[-1]
+            if (last_dir / "last.pt").exists():
+                return last_dir, True
+
+    return create_experiment_dir(base_dir), False
 
 def create_experiment_dir(base_dir: Path) -> Path:
     """
